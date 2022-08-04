@@ -1,0 +1,17 @@
+.socials {
+  display: flex;
+  flex-direction: column;
+}
+
+.socials > .row {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.row > img {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+}

@@ -1,4 +1,11 @@
-import { JSX, Component, createSignal, createEffect, Show } from 'solid-js';
+import {
+  JSX,
+  Component,
+  createSignal,
+  createEffect,
+  Show,
+  onCleanup,
+} from 'solid-js';
 
 import styles from './command.module.css';
 
@@ -7,6 +14,7 @@ import CONSTANTS from '../../../../constants';
 export type CommandProps = {
   command: string;
   getDisplay: () => boolean;
+  startDelay?: number;
   typeDelay?: number;
   commandDelay?: number;
   onFinish?: () => void;
@@ -20,19 +28,36 @@ const Command: Component<CommandProps> = ({
   onFinish = () => {},
   typeDelay = CONSTANTS.TYPE_DELAY,
   commandDelay = CONSTANTS.COMMAND_DELAY,
+  startDelay,
 }) => {
   const [getState, setState] = createSignal({
     pos: 0,
     done: false,
+    started: false,
+  });
+
+  const [getcursorBlink, setCursorBlink] = createSignal(true);
+
+  createEffect(() => {
+    if (getDisplay() && startDelay && !getState().started) {
+      setTimeout(() => {
+        setState((prev) => ({ ...prev, started: true }));
+      }, startDelay);
+    }
+  });
+
+  const interval = setInterval(() => {
+    setCursorBlink((prev) => !prev);
+  }, CONSTANTS.CURSOR_BLINK);
+
+  onCleanup(() => {
+    clearInterval(interval);
   });
 
   createEffect(() => {
-    const { pos, done } = getState();
-    if (done) {
-      return;
-    }
+    const { pos, done, started } = getState();
 
-    if (!getDisplay()) {
+    if (done || (!started && startDelay) || !getDisplay()) {
       return;
     }
 
@@ -60,6 +85,7 @@ const Command: Component<CommandProps> = ({
         <h4>
           {CONSTANTS.PROMPT_CHAR}{' '}
           {getState().done ? command : command.substring(0, getState().pos)}
+          {!getState().done && getcursorBlink() ? '█' : ''}
         </h4>
         <Show when={getState().done}>{children}</Show>
       </div>

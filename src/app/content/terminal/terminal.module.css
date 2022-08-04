@@ -45,7 +45,9 @@
 
 .green {
   background-color: green;
-}.terminal {
+}
+
+.terminal {
   position: relative;
   width: 40rem;
   height: 20rem;
@@ -56,11 +58,7 @@
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
 }
 
-.command>h4 {
-  margin: 0;
-}
-
-.terminal>.top {
+.terminal > .top {
   top: 0;
   left: 0;
   position: absolute;
@@ -73,6 +71,20 @@
   background-color: rgba(0, 0, 0, 0.5);
   border-radius: 0.5rem 0.5rem 0 0;
   box-sizing: border-box;
+}
+
+.terminal img {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 0.5rem;
+}
+
+.terminal a {
+  color: #fff;
+}
+
+.terminal a:hover {
+  color: #ffc107;
 }
 
 .circle {
