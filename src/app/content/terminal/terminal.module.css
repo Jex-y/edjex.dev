@@ -1,0 +1,95 @@
+.terminal {
+  position: relative;
+  width: 40rem;
+  height: fit-content;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  padding-top: 2.5rem;
+  background-color: rgba(0, 0, 0, 0.5);
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+.command>h4 {
+  margin: 0;
+}
+
+.terminal>.top {
+  top: 0;
+  left: 0;
+  position: absolute;
+  width: 100%;
+  height: 2rem;
+  padding: 0.5rem 1rem;
+  display: flex;
+  justify-content: start;
+  gap: 0.75rem;
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 0.5rem 0.5rem 0 0;
+  box-sizing: border-box;
+}
+
+.circle {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  background-color: #fff;
+}
+
+.red {
+  background-color: red;
+}
+
+.yellow {
+  background-color: yellow;
+}
+
+.green {
+  background-color: green;
+}.terminal {
+  position: relative;
+  width: 40rem;
+  height: 20rem;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  padding-top: 2.5rem;
+  background-color: rgba(0, 0, 0, 0.5);
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+.command>h4 {
+  margin: 0;
+}
+
+.terminal>.top {
+  top: 0;
+  left: 0;
+  position: absolute;
+  width: 100%;
+  height: 2rem;
+  padding: 0.5rem 1rem;
+  display: flex;
+  justify-content: start;
+  gap: 0.75rem;
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 0.5rem 0.5rem 0 0;
+  box-sizing: border-box;
+}
+
+.circle {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  background-color: #fff;
+}
+
+.red {
+  background-color: red;
+}
+
+.yellow {
+  background-color: yellow;
+}
+
+.green {
+  background-color: green;
+}
