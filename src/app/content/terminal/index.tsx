@@ -2,12 +2,36 @@ import type { Component } from 'solid-js';
 import { createSignal, createEffect } from 'solid-js';
 
 import Command from './command';
+import Projects from './projects';
 
 import styles from './terminal.module.css';
 
 import CONSTANTS from '../../../constants';
+import photo from '../../../assets/profile.jpg';
 
 const terminal: Component = () => {
+  const [getCommandIndex, setCommandIndex] = createSignal(0);
+
+  const onFinish = () => {
+    setCommandIndex((prev) => prev + 1);
+  };
+
+  const experienceSince = (date: Date) => {
+    const now = new Date();
+    let diff = (now.getFullYear() - date.getFullYear()) * 12;
+    diff += now.getMonth() - date.getMonth();
+
+    if (diff < 1) {
+      return `Less than a month`;
+    } else if (diff < 12) {
+      return `${diff} months`;
+    } else if (diff < 60) {
+      return `${Math.floor(diff / 12)} years, ${diff % 12} months`;
+    } else {
+      return `${Math.floor(diff / 12)} years`;
+    }
+  };
+
   return (
     <div class={styles.terminal}>
       <div class={styles.top}>
@@ -17,26 +41,42 @@ const terminal: Component = () => {
       </div>
       <Command
         command='whoami'
-        getDisplay={() => true}
-        startDelay={CONSTANTS.START_DELAY}>
+        getDisplay={() => getCommandIndex() >= 0}
+        startDelay={CONSTANTS.START_DELAY}
+        onFinish={onFinish}>
         <p>
-          I am Ed Jex, a computer science student at Durham university. I am
-          currenlty doing a summer internship at{' '}
-          <a href={'https://www.cisco.com/'}>Cisco</a> where I am working on the{' '}
-          <a href={'https://web.webex.com'}>Webex web client</a>.
+          Ed Jex, a computer science student at Durham university and software
+          developer
         </p>
-        <p>
-          I love to work on personal projects in my free time. At the moment I
-          am working on a social media platform through which I am learning to
-          better use AWS serverless products.
-        </p>
-        <p>
-          Recently, I worked on a project to measure the river level in Durham.
-          It is still a work in progress as I have not yet deployed my own IoT
-          sensor. This project is hosted at{' '}
-          <a href='https://river-level.edjex.net'>river-level.edjex.net</a>{' '}
-          where it is running on a AWS ECS service and using AWS cloudfront.
-        </p>
+      </Command>
+      {/* <Command
+        command='ls ./github/projects'
+        getDisplay={() => getCommandIndex() >= 1}
+        startDelay={CONSTANTS.START_DELAY}
+        onFinish={onFinish}>
+        <Projects />
+      </Command> */}
+      <Command
+        command='neofetch'
+        getDisplay={() => getCommandIndex() >= 1}
+        startDelay={CONSTANTS.START_DELAY}
+        onFinish={onFinish}>
+        <div class={styles.neofetch}>
+          <img src={photo} alt='Ed Jex' />
+          <div>
+            <a href='mailto:edwardjex@live.co.uk'>edwardjex@live.co.uk</a>
+            <span>
+              JavaScript/Typescript: {experienceSince(CONSTANTS.JS_LEARN_DATE)}
+            </span>
+            <span class={styles.subskill}>React</span>
+            <span class={styles.subskill}>Redux</span>
+            <span>Python: {experienceSince(CONSTANTS.PY_LEARN_DATE)}</span>
+            <span class={styles.subskill}>Numpy</span>
+            <span class={styles.subskill}>TensorFlow</span>
+            <span>AWS: {experienceSince(CONSTANTS.AWS_LEARN_DATE)}</span>
+            <span>CI/CD: {experienceSince(CONSTANTS.JS_LEARN_DATE)}</span>
+          </div>
+        </div>
       </Command>
     </div>
   );

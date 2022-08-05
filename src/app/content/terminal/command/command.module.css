@@ -1,3 +1,7 @@
-.command>h4 {
+.command>* {
   margin: 0;
+}
+
+.command {
+  margin-bottom: 1rem;
 }

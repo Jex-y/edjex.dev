@@ -5,8 +5,9 @@
   border-radius: 0.5rem;
   padding: 1rem;
   padding-top: 2.5rem;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.35);
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.5);
 }
 
 .command>h4 {
@@ -32,45 +33,27 @@
   width: 1rem;
   height: 1rem;
   border-radius: 50%;
-  background-color: #fff;
+  outline-width: 0.25rem;
+  outline-offset: -0.25rem;
+  outline-style: solid;
+  background-color: rgba(255, 255, 255, 0.1);
+  transition: all 0.2s ease-in-out;
+}
+
+.circle:hover {
+  transform: scale(1.1);
 }
 
 .red {
-  background-color: red;
+  outline-color: red;
 }
 
 .yellow {
-  background-color: yellow;
+  outline-color: yellow;
 }
 
 .green {
-  background-color: green;
-}
-
-.terminal {
-  position: relative;
-  width: 40rem;
-  height: 20rem;
-  border-radius: 0.5rem;
-  padding: 1rem;
-  padding-top: 2.5rem;
-  background-color: rgba(0, 0, 0, 0.5);
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
-}
-
-.terminal > .top {
-  top: 0;
-  left: 0;
-  position: absolute;
-  width: 100%;
-  height: 2rem;
-  padding: 0.5rem 1rem;
-  display: flex;
-  justify-content: start;
-  gap: 0.75rem;
-  background-color: rgba(0, 0, 0, 0.5);
-  border-radius: 0.5rem 0.5rem 0 0;
-  box-sizing: border-box;
+  outline-color: green;
 }
 
 .terminal img {
@@ -81,27 +64,42 @@
 
 .terminal a {
   color: #fff;
+  text-decoration: underline;
 }
 
 .terminal a:hover {
   color: #ffc107;
 }
 
-.circle {
-  width: 1rem;
-  height: 1rem;
+.neofetch {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 0.5fr 1fr;
+  justify-items: center;
+  margin-top: 1rem;
+}
+
+.neofetch > img {
+  width: 10rem;
+  height: 10rem;
   border-radius: 50%;
-  background-color: #fff;
+  margin-top: auto;
+  margin-bottom: auto;
 }
 
-.red {
-  background-color: red;
+.neofetch > div {
+  display: flex;
+  flex-direction: column;
+  justify-content: start;
+  align-items: start;
+  width: 100%;
+  height: 100%;
+}
+.neofetch a {
+  text-decoration: dashed underline;
+  margin-bottom: 0.5rem;
 }
 
-.yellow {
-  background-color: yellow;
-}
-
-.green {
-  background-color: green;
+.subskill {
+  margin-left: 1rem;
 }
