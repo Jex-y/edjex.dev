@@ -26,6 +26,11 @@ jobs:
         run: yarn
       - name: Build
         run: yarn build
+      - name: Upload Build
+        uses: actions/upload-artifact@v3.1.0
+        with:
+          name: build
+          path: dist
   deploy:
     runs-on: ubuntu-latest
     needs: build
@@ -33,6 +38,11 @@ jobs:
       name: 'S3 Deployment'
       url: 'https://edjex.net'
     steps:
+    - name: Download a Build
+      uses: actions/download-artifact@v3.0.0
+      with:
+        name: build
+        path: dist
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:
