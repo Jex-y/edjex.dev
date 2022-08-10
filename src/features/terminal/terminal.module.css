@@ -86,6 +86,12 @@
   margin-bottom: auto;
 }
 
+@media screen and (max-width: 1200px) {
+  .neofetch {
+    grid-template-columns: 1fr;
+  }
+}
+
 .neofetch > div {
   display: flex;
   flex-direction: column;
