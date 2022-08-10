@@ -70,6 +70,40 @@ const terminal: Component = () => {
           </div>
         </div>
       </Command>
+      <Command
+        command={`man 'Ed Jex'`}
+        getDisplay={() => getCommandIndex() >= 2}
+        startDelay={CONSTANTS.START_DELAY}
+        onFinish={onFinish}>
+        <div class={styles.man}>
+          <h5>EXPERIENCE & QUALIFICATIONS</h5>
+          <p>
+            I am current completing a software engineering internship at Cisco
+            where I am working on the{' '}
+            <a href='https://web.webex.com'>Webex web app</a> using React,
+            Redux, and Typescript.
+          </p>
+          <p>
+            In the first year of my degree I achieved firsts in all of my
+            modules. For my programming module coursework I created{' '}
+            <a href='https://river-level.edjex.net'>river-level.edjex.net</a>.
+            At school, I got A*s in Maths, Further Maths, Physics, and Computer
+            Science at A-Level.
+          </p>
+        </div>
+      </Command>
+      <Command
+        command='ls -la ./contact'
+        getDisplay={() => getCommandIndex() >= 3}
+        startDelay={CONSTANTS.START_DELAY}
+        onFinish={onFinish}>
+        <div class={styles.contact}>
+          <span>GitHub</span>
+          <a href='https://github.com/Jex-y'>Jex-y</a>
+          <span>LinkedIn</span>
+          <a href='https://www.linkedin.com/in/edward-jex/'>Edward Jex</a>
+        </div>
+      </Command>
     </div>
   );
 };
