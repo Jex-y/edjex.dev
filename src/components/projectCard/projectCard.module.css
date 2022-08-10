@@ -1,0 +1,68 @@
+.card {
+  background-color: rgba(0, 0, 0, 0.4);
+  border-radius: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  width: fit-content;
+  padding: 1rem;
+  flex-grow: 0;
+}
+
+/* Try and not use media query */
+@media (max-width: 992px) {
+  .card {
+    flex-grow: 1;
+  }
+}
+
+.card > .language {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: small;
+  display: flex;
+  justify-content: space-between
+}
+
+.card > .description > p {
+  margin: 0.2rem 0;
+}
+
+.card > .name {
+  font-size: large;
+  font-weight: bold;
+}
+
+.card > .stats {
+  display: grid;
+  width: 100%;
+  grid-template-columns: 2.5rem 1fr;
+  gap: 1rem;
+}
+
+.language > .watchers {
+  display: flex;
+  align-items:center;
+  justify-content: space-between;
+  width: 2rem;
+}
+
+.topics {
+  display: flex;
+  justify-content: end;
+  gap: 0.5rem;
+}
+
+.topicPill {
+  width: fit-content;
+  background-color: rgba(102, 139, 188, 1);
+  color: black;
+  font-weight: 600;
+  border-radius: 0.5em;
+  height: 1em;
+  padding: 0.2rem 0.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+

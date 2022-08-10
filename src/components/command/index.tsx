@@ -9,7 +9,7 @@ import {
 
 import styles from './command.module.css';
 
-import CONSTANTS from '../../../../constants';
+import CONSTANTS from '../../constants';
 
 export type CommandProps = {
   command: string;

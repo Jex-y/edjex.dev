@@ -1,13 +1,12 @@
 import type { Component } from 'solid-js';
 import { createSignal, createEffect } from 'solid-js';
 
-import Command from './command';
-import Projects from './projects';
+import Command from '../../components/command';
 
 import styles from './terminal.module.css';
 
-import CONSTANTS from '../../../constants';
-import photo from '../../../assets/profile.jpg';
+import CONSTANTS from '../../constants';
+import photo from '../../assets/profile.jpg';
 
 const terminal: Component = () => {
   const [getCommandIndex, setCommandIndex] = createSignal(0);
@@ -49,13 +48,6 @@ const terminal: Component = () => {
           developer
         </p>
       </Command>
-      {/* <Command
-        command='ls ./github/projects'
-        getDisplay={() => getCommandIndex() >= 1}
-        startDelay={CONSTANTS.START_DELAY}
-        onFinish={onFinish}>
-        <Projects />
-      </Command> */}
       <Command
         command='neofetch'
         getDisplay={() => getCommandIndex() >= 1}

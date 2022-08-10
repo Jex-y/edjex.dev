@@ -1,32 +1,20 @@
-import type { Component } from 'solid-js';
+import { Component, For } from 'solid-js';
 
-import Navbar from './navbar';
-import Content from './content';
+import Terminal from '../features/terminal';
+import Projects from '../features/projects';
 
 import styles from './app.module.css';
 
-const App: Component = () => {
+const Content: Component = () => {
   return (
-    <>
-      <Navbar
-        left={[
-          {
-            label: 'About',
-            href: '#about',
-          },
-        ]}
-        right={[
-          {
-            label: 'Contact',
-            href: '#',
-          },
-        ]}
-      />
-      <div class={styles.container}>
-        <Content />
-      </div>
-    </>
+    <div class={styles.container}>
+      <For each={[Terminal, Projects]}>
+        {(Item) => {
+          return <div class={styles.gridItem}>{Item({})}</div>;
+        }}
+      </For>
+    </div>
   );
 };
 
-export default App;
+export default Content;
