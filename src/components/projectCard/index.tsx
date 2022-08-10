@@ -35,7 +35,11 @@ const ProjectCard: Component<ProjectCardProps> = ({
   });
   return (
     <Show when={repoData()}>
-      <div class={styles.card}>
+      <div
+        class={styles.card}
+        onClick={() => {
+          window.location.href = repoData()?.html_url!;
+        }}>
         <span class={styles.language}>
           {repoData()?.language?.toUpperCase()}
           <div class={styles.watchers}>
