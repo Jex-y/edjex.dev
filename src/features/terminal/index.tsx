@@ -54,7 +54,7 @@ const terminal: Component = () => {
         startDelay={CONSTANTS.START_DELAY}
         onFinish={onFinish}>
         <div class={styles.neofetch}>
-          <img src={photo} alt='Ed Jex' />
+          <img src={photo} alt='Edward Jex' />
           <div>
             <a href='mailto:edwardjex@live.co.uk'>edwardjex@live.co.uk</a>
             <span>
