@@ -12,6 +12,10 @@
   box-sizing: border-box;
 }
 
+.terminal::-webkit-scrollbar {
+  display: none;
+}
+
 .command>h4 {
   margin: 0;
 }
