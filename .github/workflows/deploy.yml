@@ -37,7 +37,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - run: sudo apt install hugo
+      - run: ls -la
       - run: cd hugo
+      - run: ls -la
       - run: hugo
       - name: Upload Build
         uses: actions/upload-artifact@v3.1.0
