@@ -1,12 +1,12 @@
 baseURL = 'https://edjex.net/blog'
 languageCode = 'en-us'
-title = 'EdJex.net'
+title = "Ed Jex's Blog"
 theme = 'terminal'
 paiginate = 5
 enableEmoji = true
 
 [params]
-  contentTypeName = "blog"
+  contentTypeName = "posts"
 
   # ["orange", "blue", "red", "green", "pink"]
   themeColor = "blue"

@@ -1,5 +1,5 @@
 ---
-title: 'Edjex Net Blog'
+title: 'Launching The edjex.net Blog! 🚀'
 date: 2022-08-31T00:14:32+01:00
 author: Ed Jex
 authorTwitter: jex_y
@@ -12,7 +12,7 @@ readingTime: false
 hideComments: false
 ---
 
-# EdJex.net blog
+# edjex.net blog
 
 For some reason I have decided to make my thoughts public. This is probably not a good idea. Nevertheless I have done it anyway.
 At the very least this should be a good way to document my projects.
