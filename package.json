@@ -8,7 +8,7 @@
     "build": "vite build",
     "serve": "vite preview",
     "hugo:start": "cd hugo && hugo server --baseURL=http://localhost",
-    "hugo:build": "cd hugo && hugo"
+    "hugo:build": "cd hugo && rm -rf ./public && hugo"
   },
   "license": "MIT",
   "devDependencies": {
