@@ -6,7 +6,9 @@
     "start": "vite",
     "dev": "vite",
     "build": "vite build",
-    "serve": "vite preview"
+    "serve": "vite preview",
+    "hugo:start": "cd hugo && hugo server --baseURL=http://localhost",
+    "hugo:build": "cd hugo && hugo"
   },
   "license": "MIT",
   "devDependencies": {

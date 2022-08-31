@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  build:
+  build-solid:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -29,8 +29,22 @@ jobs:
       - name: Upload Build
         uses: actions/upload-artifact@v3.1.0
         with:
-          name: build
+          name: build-solid
           path: dist
+
+  build-hugo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: apt install hugo
+      - run: cd hugo
+      - run: hugo
+      - name: Upload Build
+        uses: actions/upload-artifact@v3.1.0
+        with:
+          name: build-hugo
+          path: public
+       
   deploy:
     runs-on: ubuntu-latest
     needs: build
@@ -38,11 +52,16 @@ jobs:
       name: 'S3 Deployment'
       url: 'https://edjex.net'
     steps:
-    - name: Download a Build
+    - name: Download solid Build
       uses: actions/download-artifact@v3.0.0
       with:
-        name: build
+        name: build-solid
         path: dist
+    - name: Download hugo Build
+      uses: actions/download-artifact@v3.0.0
+      with:
+        name: build-hugo
+        path: ./dist/blog
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:
