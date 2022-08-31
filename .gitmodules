@@ -1,0 +1,3 @@
+[submodule "hugo/themes/terminal"]
+	path = hugo/themes/terminal
+	url = git@github.com:Jex-y/hugo-theme-terminal.git
