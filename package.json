@@ -3,12 +3,12 @@
   "version": "0.0.0",
   "description": "",
   "scripts": {
-    "preinstall": "cd hugo/themes/terminal && npm install && npm run build",
     "start:solid": "vite",
     "build:solid": "vite build",
     "serve:solid": "vite preview",
+    "install:hugo": "sudo apt install hugo && cd hugo/themes/terminal && npm install",
     "start:hugo": "cd hugo && hugo server --baseURL=http://localhost",
-    "build:hugo": "cd hugo && rm -rf ./public && hugo"
+    "build:hugo": "cd hugo/themes/terminal && npm run build && cd ../../ && rm -rf ./public && hugo"
   },
   "license": "MIT",
   "devDependencies": {
