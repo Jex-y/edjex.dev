@@ -8,9 +8,6 @@ enableEmoji = true
 [params]
   contentTypeName = "posts"
 
-  # ["orange", "blue", "red", "green", "pink"]
-  themeColor = "blue"
-
   # if you set this to 0, only submenu trigger will be visibl
   showMenuItems = 2
 
