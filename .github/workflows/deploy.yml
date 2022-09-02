@@ -25,7 +25,7 @@ jobs:
       - name: Install dependencies
         run: yarn
       - name: Build
-        run: yarn build
+        run: yarn build:solid
       - name: Upload Build
         uses: actions/upload-artifact@v3.1.0
         with:
@@ -39,7 +39,7 @@ jobs:
         with:
           submodules: recursive
       - run: sudo apt install hugo
-      - run: yarn hugo:build
+      - run: yarn build:hugo
       - name: Upload Build
         uses: actions/upload-artifact@v3.1.0
         with:
@@ -73,3 +73,5 @@ jobs:
         aws-region: eu-west-2
     - name: Deploy
       run: aws s3 sync ./dist s3://edjex-website
+    - name: Invalidate old files
+      run: aws cloudfront create-invalidation --distribution-id E34Y408SF90G3D --paths '/*'
