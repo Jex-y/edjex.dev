@@ -47,15 +47,15 @@
 }
 
 .red {
-  background-color: #ef476f;
+  background-color: var(--terminal-red);
 }
 
 .yellow {
-  background-color: #ffd166;
+  background-color: var(--terminal-yellow);
 }
 
 .green {
-  background-color: #06d6a0;
+  background-color: var(--terminal-green);
 }
 
 .terminal img {
@@ -65,12 +65,12 @@
 }
 
 .terminal a {
-  color: #fff;
+  color: var(--text-primary);
   text-decoration: underline;
 }
 
 .terminal a:hover {
-  color: #118ab2;
+  color: var(--text-accent);
 }
 
 .neofetch {

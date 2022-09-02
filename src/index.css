@@ -5,6 +5,16 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #2f2f2f;
+  background-color: var(--background-primary);
   color: white;
+}
+
+:root {
+  --background-primary: #2f2f2f;
+  --background-accent: #668bbc;
+  --text-primary: #fff;
+  --text-accent: #118ab2;
+  --terminal-red: #ef476f;
+  --terminal-yellow: #ffd166;
+  --terminal-green: #06d6a0;
 }

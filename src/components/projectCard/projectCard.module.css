@@ -63,7 +63,7 @@
 
 .topicPill {
   width: fit-content;
-  background-color: rgba(102, 139, 188, 1);
+  background-color: var(--background-accent);
   color: black;
   font-weight: 600;
   border-radius: 0.5em;
