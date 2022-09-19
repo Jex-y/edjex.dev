@@ -1,5 +1,6 @@
 .card {
-  background-color: rgba(0, 0, 0, 0.4);
+  background-color: rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(5px);
   border-radius: 0.5rem;
   display: flex;
   flex-direction: column;
@@ -8,11 +9,13 @@
   padding: 1rem;
   flex-grow: 0;
   transition: all 0.2s ease-in-out;
+  box-shadow: 0 0.5rem 1rem rgba(255, 255, 255, 0.05);
 }
 
 .card:hover {
+  /* Make it look like it is coming out of the page */
   transform: scale(1.05);
-  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.5);;
+  box-shadow: 0 0.5rem 1rem rgba(255, 255, 255, 0.1);
 }
 /* Try and not use media query */
 @media screen and (max-width: 1200px) {
@@ -26,10 +29,10 @@
 }
 
 .card > .language {
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--text-secondary);
   font-size: small;
   display: flex;
-  justify-content: space-between
+  justify-content: space-between;
 }
 
 .card > .description > p {
@@ -50,7 +53,7 @@
 
 .language > .watchers {
   display: flex;
-  align-items:center;
+  align-items: center;
   justify-content: space-between;
   width: 2rem;
 }
@@ -64,7 +67,7 @@
 .topicPill {
   width: fit-content;
   background-color: var(--background-accent);
-  color: black;
+  color: var(--text-accent);
   font-weight: 600;
   border-radius: 0.5em;
   height: 1em;
@@ -73,5 +76,3 @@
   justify-content: center;
   align-items: center;
 }
-
-

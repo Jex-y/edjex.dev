@@ -1,14 +1,16 @@
 .terminal {
   position: relative;
   width: 100%;
-  height: 100%;
-  overflow:scroll;
+  height: 37.5rem;
+  overflow: scroll;
   border-radius: 0.5rem;
   padding: 1rem;
   padding-top: 2.5rem;
-  background-color: rgba(0, 0, 0, 0.35);
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
-  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.5);
+  background-color: rgba(255, 255, 255, 0.01);
+  backdrop-filter: blur(5px);
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.2);
   box-sizing: border-box;
 }
 
@@ -16,11 +18,11 @@
   display: none;
 }
 
-.command>h4 {
+.command > h4 {
   margin: 0;
 }
 
-.terminal>.top {
+.terminal > .top {
   top: 0;
   left: 0;
   position: absolute;
@@ -65,12 +67,11 @@
 }
 
 .terminal a {
-  color: var(--text-primary);
-  text-decoration: underline;
+  color: var(--text-accent);
 }
 
 .terminal a:hover {
-  color: var(--text-accent);
+  text-decoration: underline;
 }
 
 .neofetch {
@@ -79,7 +80,7 @@
   grid-template-columns: 0.5fr 1fr;
   justify-items: center;
   margin-top: 1rem;
-  gap:0.2rem;
+  gap: 0.2rem;
 }
 
 .neofetch > img {
@@ -117,7 +118,7 @@
   margin-left: 1rem;
 }
 
-.man h5  {
+.man h5 {
   margin: 0;
 }
 
