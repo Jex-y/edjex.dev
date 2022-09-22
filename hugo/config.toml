@@ -50,7 +50,7 @@ summaryLength = 30
   # TocTitle = "Table of Contents" # default
 
 [params.logo]
-  logoText = "Ed Jex's Blog"
+  logoText = "Ed Jex Blog"
 
 [params.twitter]
   # set Twitter handles for Twitter cards
@@ -58,3 +58,6 @@ summaryLength = 30
   # do not include @
   creator = "jex_y"
   site = "jex_y"
+
+[markup.goldmark.renderer]
+  unsafe = true
