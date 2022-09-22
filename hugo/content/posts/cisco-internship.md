@@ -59,9 +59,9 @@ This can best be seen when using input components as they were all custom.
 
 I explored using my own implementation for this, however I found that I could fix the usage of the Microsoft library by passing in CSS variables as the colours. THis means that the colours of the card would match the theme along with the rest of the app. Other than this, I had to replace some of the input components and style some of the built in ones.
 
-| Broken Adaptive Cards                                                                                                                                   | Fixed Adaptive Cards                                                                                                                                  |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| <img src="/blog/postImages/cisco-internship/adaptive-card-broken.png" style="height: 40rem; margin: 0 auto" title="Broken Adaptive Card In Dark Theme"> | <img src="/blog/postImages/cisco-internship/adaptive-card-fixed.png" style="height: 40rem; margin: 0 auto" title="Fixed Adaptive Card In Dark Theme"> |
+| Broken Adaptive Cards                                                               | Fixed Adaptive Cards                                                              |
+| ----------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| ![Broken Adaptive Card](/blog/postImages/cisco-internship/adaptive-card-broken.png) | ![Fixed Adaptive Card](/blog/postImages/cisco-internship/adaptive-card-fixed.png) |
 
 ### Improving end-to-end testing with visual regression testing
 
