@@ -18,7 +18,7 @@ From July to September I worked as a software engineering intern at [Cisco](http
 
 ## Background
 
-[Webex by cisco](https://www.webex.com/) is a team messaging / conference calling service. It has quite a few clients including the desktop 'thick client', mobile apps, [hardware endpoints](https://www.cisco.com/c/en_uk/products/collaboration-endpoints/index.html), and the web client which I worked on.
+[Webex by cisco](https://www.webex.com/) is a team messaging / conference calling service. It has a number of client applications including the desktop 'thick client', mobile apps, [hardware endpoints](https://www.cisco.com/c/en_uk/products/collaboration-endpoints/index.html), and the web client on which I worked.
 
 ## Technologies
 
@@ -57,11 +57,12 @@ The way that we were implementing adaptive cards was using the provided [Microso
 
 This can best be seen when using input components as they were all custom.
 
-<img src="/blog/postImages/cisco-internship/adaptive-card-broken.png" style="height: 40rem; margin: 0 auto" title="Broken Adaptive Card In Dark Theme">
+I explored using my own implementation for this, however I found that I could fix the usage of the Microsoft library by passing in CSS variables as the colours. THis means that the colours of the card would match the theme along with the rest of the app. Other than this, I had to replace some of the input components and style some of the built in ones.
 
-I explored using my own implementation for this, however I found that I could fix the usage of the Microsoft library by passing in CSS variables as the colours. As far as I am aware this is not meant to be supported however the library passes the colours straight through to HTML so it works fine and is much simpler than my own implementation.
-
-<img src="/blog/postImages/cisco-internship/adaptive-card-fixed.png" style="height: 40rem; margin: 0 auto" title="Fixed Adaptive Card In Dark Theme">
+| Broken Adaptive Cards                                                                                                                                   | Fixed Adaptive Cards |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------- |
+| <img src="/blog/postImages/cisco-internship/adaptive-card-broken.png" style="height: 40rem; margin: 0 auto" title="Broken Adaptive Card In Dark Theme"> |
+| <img src="/blog/postImages/cisco-internship/adaptive-card-fixed.png" style="height: 40rem; margin: 0 auto" title="Fixed Adaptive Card In Dark Theme">   |
 
 ### Improving end-to-end testing with visual regression testing
 
@@ -94,7 +95,7 @@ I tried to improve the unit test speed by upgrading jest from v26 to v28 but fou
 
 We currently use [webpack](https://webpack.js.org/) which is written in JS. As this is a sizable project the development server start currently takes 3 mins. I investigated using [Vite](https://vitejs.dev/) which is usually quite a lot faster. This uses [Rollup](https://rollupjs.org/guide/en/) underneath which is written in JavaScript so is still not very fast. Building with vite took 1 min 50 sec so an improvement but not large enough to make it worthwhile.
 
-[ESBuild](https://esbuild.github.io/) is written in Go and is significantly faster. My experimental branch builds in just under 4 seconds. This is a great improvement and hopefully will be able to increase developer productivity in the future. I only got this working on the second to last day of my internship and it still has some issues (icons not being loaded, wrong components being animated).
+[ESBuild](https://esbuild.github.io/) is written in Go and is significantly faster. My experimental branch builds in just under 4 seconds. This is a great improvement and hopefully will be able to increase developer productivity in the future. I got this working on the second to last day of my internship and it still has some issues (icons not being loaded, wrong components being animated).
 
 ![Build Times](/blog/postImages/cisco-internship/build-times.png)
 
