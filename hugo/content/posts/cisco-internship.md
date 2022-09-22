@@ -3,7 +3,7 @@ title = "Cisco Internship Summer 2022"
 date = "2022-09-08T20:29:35+01:00"
 author = "Ed Jex"
 authorTwitter = "Jex_y" #do not include @
-cover = "../postImages/cisco-internship/logo.jpeg"
+cover = "blog/postImages/cisco-internship/logo.jpeg"
 tags = ["Cisco", "Internship"]
 keywords = ["Cisco", "Internship", "Ed Jex", "React", "Webex"]
 description = ""
@@ -38,18 +38,18 @@ The first task I was assigned to was swapping out the legacy checkbox component 
 
 After this I worked on a new radio group component in momentum. For this I had to learn how to use [storybook](https://storybook.js.org/) for the documentation.
 
-| Legacy Component                                                         | My Implementation                                                    |
-| ------------------------------------------------------------------------ | -------------------------------------------------------------------- |
-| ![Legacy Checkbox](/postImages/cisco-internship/radio-button-legacy.png) | ![My Checkbox](/postImages/cisco-internship/radio-button-modern.png) |
+| Legacy Component                                                              | My Implementation                                                         |
+| ----------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| ![Legacy Checkbox](/blog/postImages/cisco-internship/radio-button-legacy.png) | ![My Checkbox](/blog/postImages/cisco-internship/radio-button-modern.png) |
 
 The legacy component implemented a radio button whereas I implemented a radio group. This helps to keep the downstream usage of the component closer to the spec and give it better accessability.
 
 I then updated the web app to use this new component in several places. This is where I discovered issues with [adaptive cards](https://adaptivecards.io/) in dark mode. I implemented some quick fixes for this particular case as seen below.
 
-| Using Legacy Component                                                                                        | Using My Component                                                                                            |
-| ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| ![Legacy Usage In Space Notifications Settings](/postImages/cisco-internship/radio-button-legacy-usage-1.png) | ![Modern Usage In Space Notifications Settings](/postImages/cisco-internship/radio-button-modern-usage-1.png) |
-| ![Legacy Usage In Adaptive Cards](/postImages/cisco-internship/radio-button-legacy-usage-2.png)               | ![Modern Usage In Adaptive Cards](/postImages/cisco-internship/radio-button-modern-usage-2.png)               |
+| Using Legacy Component                                                                                             | Using My Component                                                                                                 |
+| ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| ![Legacy Usage In Space Notifications Settings](/blog/postImages/cisco-internship/radio-button-legacy-usage-1.png) | ![Modern Usage In Space Notifications Settings](/blog/postImages/cisco-internship/radio-button-modern-usage-1.png) |
+| ![Legacy Usage In Adaptive Cards](/blog/postImages/cisco-internship/radio-button-legacy-usage-2.png)               | ![Modern Usage In Adaptive Cards](/blog/postImages/cisco-internship/radio-button-modern-usage-2.png)               |
 
 ### Fixing Adaptive Card styling
 
@@ -57,11 +57,11 @@ The way that we were implementing adaptive cards was using the provided [Microso
 
 This can best be seen when using input components as they were all custom.
 
-<img src="/postImages/cisco-internship/adaptive-card-broken.png" style="height: 40rem; margin: 0 auto" title="Broken Adaptive Card In Dark Theme">
+<img src="/blog/postImages/cisco-internship/adaptive-card-broken.png" style="height: 40rem; margin: 0 auto" title="Broken Adaptive Card In Dark Theme">
 
 I explored using my own implementation for this, however I found that I could fix the usage of the Microsoft library by passing in CSS variables as the colours. As far as I am aware this is not meant to be supported however the library passes the colours straight through to HTML so it works fine and is much simpler than my own implementation.
 
-<img src="/postImages/cisco-internship/adaptive-card-fixed.png" style="height: 40rem; margin: 0 auto" title="Fixed Adaptive Card In Dark Theme">
+<img src="/blog/postImages/cisco-internship/adaptive-card-fixed.png" style="height: 40rem; margin: 0 auto" title="Fixed Adaptive Card In Dark Theme">
 
 ### Improving end-to-end testing with visual regression testing
 
@@ -69,26 +69,26 @@ To make sure that a bug like this doesn't happen again I implemented visual regr
 
 I tested our implementation over a number of example of adaptive cards. Some of the screenshots produced by the tests can be seen below:
 
-| Name           | Light Theme                                                                                       | Dark Theme                                                                                      |
-| -------------- | ------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| Flight Details | ![Flight Details Light](/postImages/cisco-internship/flightDetails-Chrome-light-theme--linux.png) | ![Flight Details Dark](/postImages/cisco-internship/flightDetails-Chrome-dark-theme--linux.png) |
-| Food Order     | ![Food Order Light](/postImages/cisco-internship/foodOrder-Chrome-light-theme--linux.png)         | ![Food Order Dark](/postImages/cisco-internship/foodOrder-Chrome-dark-theme--linux.png)         |
-| Image Gallery  | ![Image Gallery Light](/postImages/cisco-internship/imageGallery-Chrome-light-theme--linux.png)   | ![Image Gallery Dark](/postImages/cisco-internship/imageGallery-Chrome-dark-theme--linux.png)   |
-| Stock Update   | ![Stock Update Light](/postImages/cisco-internship/stockUpdate-Chrome-light-theme--linux.png)     | ![Stock Update Dark](/postImages/cisco-internship/stockUpdate-Chrome-dark-theme--linux.png)     |
+| Name           | Light Theme                                                                                            | Dark Theme                                                                                           |
+| -------------- | ------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| Flight Details | ![Flight Details Light](/blog/postImages/cisco-internship/flightDetails-Chrome-light-theme--linux.png) | ![Flight Details Dark](/blog/postImages/cisco-internship/flightDetails-Chrome-dark-theme--linux.png) |
+| Food Order     | ![Food Order Light](/blog/postImages/cisco-internship/foodOrder-Chrome-light-theme--linux.png)         | ![Food Order Dark](/blog/postImages/cisco-internship/foodOrder-Chrome-dark-theme--linux.png)         |
+| Image Gallery  | ![Image Gallery Light](/blog/postImages/cisco-internship/imageGallery-Chrome-light-theme--linux.png)   | ![Image Gallery Dark](/blog/postImages/cisco-internship/imageGallery-Chrome-dark-theme--linux.png)   |
+| Stock Update   | ![Stock Update Light](/blog/postImages/cisco-internship/stockUpdate-Chrome-light-theme--linux.png)     | ![Stock Update Dark](/blog/postImages/cisco-internship/stockUpdate-Chrome-dark-theme--linux.png)     |
 
 Carrying on from this, I added visual regression tests for some of the commonly visited pages of the application and the meeting join flow. Some examples of this are shown below.
 
-| Name              | Screenshot                                                                                          |
-| ----------------- | --------------------------------------------------------------------------------------------------- |
-| Messaging Page    | ![Messaging Page](/postImages/cisco-internship/messaging-page-main-Chrome-dark-theme--linux.png)    |
-| Calling Toast     | ![Calling Toast](/postImages/cisco-internship/meeting-toast-Chrome-dark-theme--linux.png)           |
-| Interstitial Page | ![Interstitial Page](/postImages/cisco-internship/interstitial-screen-Chrome-dark-theme--linux.png) |
+| Name              | Screenshot                                                                                               |
+| ----------------- | -------------------------------------------------------------------------------------------------------- |
+| Messaging Page    | ![Messaging Page](/blog/postImages/cisco-internship/messaging-page-main-Chrome-dark-theme--linux.png)    |
+| Calling Toast     | ![Calling Toast](/blog/postImages/cisco-internship/meeting-toast-Chrome-dark-theme--linux.png)           |
+| Interstitial Page | ![Interstitial Page](/blog/postImages/cisco-internship/interstitial-screen-Chrome-dark-theme--linux.png) |
 
 ### Optimising test pipeline and developer experience
 
 As I was implementing more end-to-end tests, I had to keep running our testing pipeline. This was taking about 25 mins per run. A breakdown of which steps were taking the longest can be seen below.
 
-![Pipeline Stages](/postImages/cisco-internship/pipeline-stages.png)
+![Pipeline Stages](/blog/postImages/cisco-internship/pipeline-stages.png)
 
 I tried to improve the unit test speed by upgrading jest from v26 to v28 but found that there were a lot of issues with the fake timers. The next longest step was the build.
 
@@ -96,7 +96,7 @@ We currently use [webpack](https://webpack.js.org/) which is written in JS. As t
 
 [ESBuild](https://esbuild.github.io/) is written in Go and is significantly faster. My experimental branch builds in just under 4 seconds. This is a great improvement and hopefully will be able to increase developer productivity in the future. I only got this working on the second to last day of my internship and it still has some issues (icons not being loaded, wrong components being animated).
 
-![Build Times](/postImages/cisco-internship/build-times.png)
+![Build Times](/blog/postImages/cisco-internship/build-times.png)
 
 ## Conclusion
 
