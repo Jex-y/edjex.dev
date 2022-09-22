@@ -38,9 +38,9 @@ The first task I was assigned to was swapping out the legacy checkbox component 
 
 After this I worked on a new radio group component in momentum. For this I had to learn how to use [storybook](https://storybook.js.org/) for the documentation.
 
-| Legacy Component                                                        | My Implementation                                                         |
-| ----------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| ![Legacy Checkbox](postImages/cisco-internship/radio-button-legacy.png) | ![My Checkbox](/blog/postImages/cisco-internship/radio-button-modern.png) |
+| Legacy Component                                                              | My Implementation                                                         |
+| ----------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| ![Legacy Checkbox](/blog/postImages/cisco-internship/radio-button-legacy.png) | ![My Checkbox](/blog/postImages/cisco-internship/radio-button-modern.png) |
 
 The legacy component implemented a radio button whereas I implemented a radio group. This helps to keep the downstream usage of the component closer to the spec and give it better accessability.
 
