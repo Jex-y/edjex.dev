@@ -12,8 +12,6 @@ readingTime = true
 hideComments = false
 +++
 
-# Cisco Internship Summer 2022
-
 From July to September I worked as a software engineering intern at [Cisco](https://www.cisco.com). I worked on the web app team developing [web.webex.com](https://web.webex.com).
 
 ## Background
