@@ -7,7 +7,7 @@
     "build:solid": "vite build",
     "serve:solid": "vite preview",
     "install:hugo": "sudo apt install hugo && cd hugo/themes/terminal && npm install",
-    "start:hugo": "cd hugo && hugo server --baseURL=http://localhost",
+    "start:hugo": "cd hugo && hugo server --baseURL=http://localhost/blog",
     "build:hugo": "cd hugo/themes/terminal && npm run build && cd ../../ && rm -rf ./public && hugo"
   },
   "license": "MIT",
