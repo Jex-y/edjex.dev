@@ -1,7 +1,7 @@
 export default [
   {
     user: 'Jex-y',
-    repo: 'edjex.net',
+    repo: 'edjex.dev',
   },
   {
     user: 'momentum-design',

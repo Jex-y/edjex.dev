@@ -45,7 +45,7 @@ const terminal: Component = () => {
         onFinish={onFinish}>
         <p>
           Ed Jex, a computer science student at Durham university and software
-          developer
+          developer.
         </p>
       </Command>
       <Command
@@ -62,6 +62,7 @@ const terminal: Component = () => {
             </span>
             <span class={styles.subskill}>React</span>
             <span class={styles.subskill}>Redux</span>
+            <span class={styles.subskill}>Solid</span>
             <span>Python: {experienceSince(CONSTANTS.PY_LEARN_DATE)}</span>
             <span class={styles.subskill}>Numpy</span>
             <span class={styles.subskill}>TensorFlow</span>
@@ -78,17 +79,15 @@ const terminal: Component = () => {
         <div class={styles.man}>
           <h5>EXPERIENCE & QUALIFICATIONS</h5>
           <p>
-            I am current completing a software engineering internship at Cisco
-            where I am working on the{' '}
+            Last summer I completed a software engineering internship at Cisco
+            where I was working on the{' '}
             <a href='https://web.webex.com'>Webex web app</a> using React,
             Redux, and Typescript.
           </p>
           <p>
-            In the first year of my degree I achieved firsts in all of my
-            modules. For my programming module coursework I created{' '}
-            <a href='https://river-level.edjex.net'>river-level.edjex.net</a>.
-            At school, I got A*s in Maths, Further Maths, Physics, and Computer
-            Science at A-Level.
+            I am currently studying an integrated grade of of grated masters
+            degree course at Durham, graduating in 2025. I am on track for a
+            first.
           </p>
         </div>
       </Command>
