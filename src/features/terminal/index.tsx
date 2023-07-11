@@ -45,7 +45,7 @@ const terminal: Component = () => {
         onFinish={onFinish}>
         <p>
           Ed Jex, a computer science student at Durham university and software
-          developer.
+          developer based in the UK.
         </p>
       </Command>
       <Command
@@ -56,7 +56,9 @@ const terminal: Component = () => {
         <div class={styles.neofetch}>
           <img src={photo} alt='Edward Jex' />
           <div>
-            <a href='mailto:edwardjex@live.co.uk'>edwardjex@live.co.uk</a>
+            <a href='mailto:edward.j.jex@durham.ac.uk'>
+              edward.j.jex@durham.ac.uk
+            </a>
             <span>
               JavaScript/Typescript: {experienceSince(CONSTANTS.JS_LEARN_DATE)}
             </span>
