@@ -1,22 +1,30 @@
 {
-  "name": "peronsal_website",
-  "version": "0.0.0",
-  "description": "",
-  "scripts": {
-    "start:solid": "vite",
-    "build:solid": "vite build",
-    "serve:solid": "vite preview",
-    "install:hugo": "sudo apt install hugo && cd hugo/themes/terminal && npm install",
-    "start:hugo": "cd hugo && hugo server --baseURL=http://localhost/blog",
-    "build:hugo": "cd hugo/themes/terminal && npm run build && cd ../../ && rm -rf ./public && hugo"
-  },
-  "license": "MIT",
-  "devDependencies": {
-    "typescript": "^4.7.4",
-    "vite": "^3.0.0",
-    "vite-plugin-solid": "^2.3.0"
-  },
-  "dependencies": {
-    "solid-js": "^1.4.7"
-  }
+	"name": "edjex.dev",
+	"private": true,
+	"version": "0.0.0",
+	"type": "module",
+	"scripts": {
+		"dev": "bunx --bun vite",
+		"build": "bunx --bun tsc -b && bunx --bun vite build",
+		"lint": "biome lint",
+		"format": "biome format",
+		"preview": "vite preview"
+	},
+	"dependencies": {
+		"class-variance-authority": "^0.7.0",
+		"react": "^18.3.1",
+		"react-dom": "^18.3.1"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^1.9.2",
+		"@types/react": "^18.3.3",
+		"@types/react-dom": "^18.3.0",
+		"@vitejs/plugin-react-swc": "^3.5.0",
+		"autoprefixer": "^10.4.20",
+		"globals": "^15.9.0",
+		"postcss": "^8.4.47",
+		"tailwindcss": "^3.4.13",
+		"typescript": "^5.5.3",
+		"vite": "^5.4.1"
+	}
 }

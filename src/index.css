@@ -1,25 +1,36 @@
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
-  --text-primary: #fff;
-  --text-secondary: #a9b1d6;
-  --text-accent: #23b0ff;
-  --background-primary: #1d1e1f;
-  --background-accent: #2d2e2f;
-  --terminal-red: #ef476f;
-  --terminal-yellow: #ffd166;
-  --terminal-green: #06d6a0;
-}
+    --background: 169 65% 3.84%;
+    --foreground: 169 10% 97.4%;
 
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  background: var(--background-primary);
-  color: var(--text-primary);
-}
+    --muted: 169 13% 2.88%;
+    --muted-foreground: 169 10% 54.8%;
 
-#root {
-  height: 100vh;
+    --popover: 169 45% 6.24%;
+    --popover-foreground: 169 10% 97.4%;
+
+    --card: 169 45% 6.24%;
+    --card-foreground: 169 10% 97.4%;
+
+    --border: 169 13% 2.88%;
+    --input: 169 13% 2.88%;
+
+    --primary: 169 100% 48%;
+    --primary-foreground: 169 10% 4.8%;
+
+    --secondary: 169 13% 2.88%;
+    --secondary-foreground: 169 10% 97.4%;
+
+    --accent: 169 13% 2.88%;
+    --accent-foreground: 169 10% 97.4%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 169 10% 97.4%;
+
+    --ring: 169 100% 48%;
 }
