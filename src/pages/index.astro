@@ -1,49 +1,111 @@
 ---
-import BaseHead from "../components/BaseHead.astro";
-import Header from "../components/Header.astro";
-import Footer from "../components/Footer.astro";
-import { SITE_TITLE, SITE_DESCRIPTION } from "../consts";
+import BaseLayout from '../layouts/BaseLayout.astro';
+import TimelineDate from '../components/TimelineDate.astro';
+import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
+import { Image } from 'astro:assets';
+
+import ProfilePic from '../assets/profile.jpg';
+import Cisco from '../components/icons/Cisco.astro';
+import GitHubRepoCard from '../components/GitHubRepoCard.astro';
+
+const github_repos = [
+  'Jex-y/lpcv-project-implementation',
+  'Jex-y/edjex.dev',
+  'Jex-y/river-level-analysis',
+  'Jex-y/cv',
+];
 ---
 
-<!doctype html>
-<html lang="en">
-	<head>
-		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
-	</head>
-	<body>
-		<Header />
-		<main>
-			<h1>🧑‍🚀 Hello, Astronaut!</h1>
-			<p>
-				Welcome to the official <a href="https://astro.build/">Astro</a> blog starter template. This
-				template serves as a lightweight, minimally-styled starting point for anyone looking to build
-				a personal website, blog, or portfolio with Astro.
-			</p>
-			<p>
-				This template comes with a few integrations already configured in your
-				<code>astro.config.mjs</code> file. You can customize your setup with
-				<a href="https://astro.build/integrations">Astro Integrations</a> to add tools like Tailwind,
-				React, or Vue to your project.
-			</p>
-			<p>Here are a few ideas on how to get started with the template:</p>
-			<ul>
-				<li>Edit this page in <code>src/pages/index.astro</code></li>
-				<li>Edit the site header items in <code>src/components/Header.astro</code></li>
-				<li>Add your name to the footer in <code>src/components/Footer.astro</code></li>
-				<li>Check out the included blog posts in <code>src/content/blog/</code></li>
-				<li>Customize the blog post page layout in <code>src/layouts/BlogPost.astro</code></li>
-			</ul>
-			<p>
-				Have fun! If you get stuck, remember to
-				<a href="https://docs.astro.build/">read the docs</a>
-				or <a href="https://astro.build/chat">join us on Discord</a> to ask questions.
-			</p>
-			<p>
-				Looking for a blog template with a bit more personality? Check out
-				<a href="https://github.com/Charca/astro-blog-template">astro-blog-template</a>
-				by <a href="https://twitter.com/Charca">Maxi Ferreira</a>.
-			</p>
-		</main>
-		<Footer />
-	</body>
-</html>
+<BaseLayout title={SITE_TITLE} description={SITE_DESCRIPTION}>
+  <main class="w-full container px-4 mx-auto">
+    <section>
+      <div
+        class="grid grid-cols-1 md:grid-cols-2 items-top justify-center gap-4 md:gap-8 mb-10"
+      >
+        <Image
+          src={ProfilePic}
+          alt="Edward Jex profile pic"
+          class="w-32 md:w-64 aspect-square rounded-full object-cover mx-auto md:mr-0 md:ml-auto"
+        />
+        <div class="w-fit max-w-128 mt-2 md:mt-8">
+          <h1 class="font-bold text-xl md:text-4xl">Ed Jex</h1>
+          <hr />
+          <div class="md:text-lg text-foreground/80">
+            <p class="mb-2">
+              Computer Science MEng Grad (2025 Durham University)
+            </p>
+            <p>Interested in computer vision, robotics, and deep learning</p>
+          </div>
+        </div>
+      </div>
+      <div class="flex flex-col max-w-4xl mx-auto">
+        <TimelineDate heading="Current">
+          <p class="text-foreground/80">
+            Looking for high-impact opportunities in computer vision, robotics,
+            and deep learning.
+          </p>
+        </TimelineDate>
+        <TimelineDate date="2025-07-05" heading="Graduation 🎓">
+          <ul class="text-foreground/80">
+            <li>
+              Graduated with a 1st class honours in Computer Science from Durham
+              University.
+            </li>
+            <li>
+              Achieved an overall grade of 82%, with a final year grade of 86%.
+            </li>
+            <li>
+              Recognised for academic excellence with prizes for the top project
+              and top overall grade.
+            </li>
+          </ul>
+        </TimelineDate>
+        <TimelineDate date="2024-07-01" heading="River Level Dashboard">
+          <p class="text-foreground/80">
+            Developed a deep learning model to forecast the river level in
+            Durham. Deployed a <a href="https://river.edjex.dev">dashboard</a> to
+            display the forecast and other data relevant to rowing.
+          </p>
+          <p class="text-foreground/80">
+            Dataset collected from the Environment Agency, model trained in
+            PyTorch. Rust, MongoDB backend, NextJS frontend.
+          </p>
+        </TimelineDate>
+        <TimelineDate date="2022-07-01" heading="Cicso Internship">
+          <p class="text-foreground/80">
+            Completed a 12-week internship at Cisco, working on the Webex web
+            client. Worked with React.
+          </p>
+          <p class="text-foreground/80">
+            Worked on upgrading outdated components, adaptive card rendering,
+            and improving build times.
+          </p>
+        </TimelineDate>
+        <TimelineDate date="2021-10-01" heading="University">
+          <p class="text-foreground/80">
+            Started my Computer Science MEng degree at Durham University.
+          </p>
+        </TimelineDate>
+        <TimelineDate date="2021-05-01" heading="A Levels">
+          <p class="text-foreground/80">
+            Achieved 4x A* in A Level Maths, Further Maths, Computer Science and
+            Physics.
+          </p>
+        </TimelineDate>
+      </div>
+    </section>
+    <section class="max-w-4xl mx-auto">
+      <h2 class="text-2xl font-bold mt-8 mb-4">Projects</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {
+          github_repos.map((repo) => (
+            <GitHubRepoCard
+              githubUrl={`https://github.com/${repo}`}
+              key={repo}
+            />
+          ))
+        }
+      </div>
+    </section>
+  </main>
+</BaseLayout>

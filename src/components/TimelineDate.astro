@@ -1,0 +1,34 @@
+---
+type Props = {
+  date?: Date | string;
+  heading: string;
+};
+---
+
+<div
+  class="relative border-l-1 md:border-l-2 border-l-primary pl-8 pb-8 w-full"
+>
+  <div
+    class="absolute left-0 top-0 -ml-2 w-4 h-4 bg-background border-2 border-primary rounded-full"
+  >
+  </div>
+  <div class="flex gap-4 -mt-1 mb-2 items-baseline">
+    {
+      Astro.props.date && (
+        <time
+          datetime={Astro.props.date.toString()}
+          class="text-sm text-foreground/60 w-24"
+        >
+          {new Date(Astro.props.date).toLocaleDateString('en-GB', {
+            month: 'long',
+            year: 'numeric',
+          })}
+        </time>
+      )
+    }
+    <h3 class="text-lg font-semibold">
+      {Astro.props.heading}
+    </h3>
+  </div>
+  <slot />
+</div>
