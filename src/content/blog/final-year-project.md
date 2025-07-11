@@ -3,6 +3,7 @@ title: Optimising Deep Learning Computer Vision for Energy-Constrained Edge Devi
 description: Or how reframing the problem can improve energy efficency by orders of magnitude.
 pubDate: 'Jul 9 2025'
 heroImage: '../../assets/project/project-setup.jpg'
+draft: true
 ---
 
 Modern computer vision often consists of throwing ever larger and more general

@@ -6,9 +6,10 @@ import { getCollection } from 'astro:content';
 import FormattedDate from '../../components/FormattedDate.astro';
 import { Image } from 'astro:assets';
 
-const posts = (await getCollection('blog')).sort(
-  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
-);
+// Don't display draft posts
+const posts = (await getCollection('blog'))
+  .filter((post) => post.data.draft !== true && post.data.pubDate <= new Date())
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 ---
 
 <BaseLayout title={SITE_TITLE} description={SITE_DESCRIPTION}>
