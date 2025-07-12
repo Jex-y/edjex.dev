@@ -13,7 +13,15 @@ import pdf from 'astro-pdf';
 export default defineConfig({
         site: 'https://edjex.dev',
         integrations: [pdf({
-                pages: { '/cv': { path: '/cv.pdf' } },
+                pages: {
+                        '/cv': {
+                                path: '/cv.pdf',
+                                pdf: {
+                                        format: 'A4',
+                                        printBackground: true,
+                                }
+                        }
+                },
                 launch: { args: ['--no-sandbox',] },
         })],
         markdown: {
