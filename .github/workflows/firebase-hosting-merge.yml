@@ -9,6 +9,8 @@ on:
 jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
+    environment: edjex.dev
+    url: https://edjex.dev
     steps:
       - uses: actions/checkout@v4
       - run: npm install && npm run build
