@@ -1,0 +1,20 @@
+---
+import { z } from 'zod';
+
+const PropsSchema = z.object({
+  date: z.date({ coerce: true }),
+});
+
+type Props = z.input<typeof PropsSchema>;
+
+const { date } = PropsSchema.parse(Astro.props);
+---
+
+<time datetime={date.toString()} class="text-sm text-foreground/60 w-24">
+  {
+    new Date(date).toLocaleDateString('en-GB', {
+      month: 'long',
+      year: 'numeric',
+    })
+  }
+</time>

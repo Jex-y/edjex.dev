@@ -1,0 +1,18 @@
+---
+type Props = {
+  title: string;
+  date?: string;
+  subtitle?: string;
+};
+
+const { title, date, subtitle } = Astro.props as Props;
+---
+
+<div class="my-2">
+  <div class="flex items-center justify-between gap-2">
+    <h3 class="font-bold">{title}</h3>
+    {date && <span>{date}</span>}
+  </div>
+  {subtitle && <p class="text-gray-600">{subtitle}</p>}
+  <slot />
+</div>

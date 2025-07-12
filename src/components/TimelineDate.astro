@@ -1,8 +1,11 @@
 ---
+import DateFormat from '../components/DateFormat.astro';
 type Props = {
   date?: Date | string;
   heading: string;
 };
+
+const { date, heading } = Astro.props as Props;
 ---
 
 <div
@@ -13,21 +16,9 @@ type Props = {
   >
   </div>
   <div class="flex gap-4 -mt-1 mb-2 items-baseline">
-    {
-      Astro.props.date && (
-        <time
-          datetime={Astro.props.date.toString()}
-          class="text-sm text-foreground/60 w-24"
-        >
-          {new Date(Astro.props.date).toLocaleDateString('en-GB', {
-            month: 'long',
-            year: 'numeric',
-          })}
-        </time>
-      )
-    }
+    {date && <DateFormat date={date} />}
     <h3 class="text-lg font-semibold">
-      {Astro.props.heading}
+      {heading}
     </h3>
   </div>
   <slot />

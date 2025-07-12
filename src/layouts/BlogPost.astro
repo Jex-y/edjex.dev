@@ -13,8 +13,8 @@ const { title, description, pubDate, updatedDate, heroImage, headings } =
   Astro.props;
 ---
 
-<BaseLayout title={title} description={description}>
-  <main class="relative">
+<BaseLayout title={title} description={description} image={heroImage}>
+  <main class="relative scroll-smooth">
     <div class="container mx-auto max-w-4xl px-4">
       <article class="w-full">
         <div class="w-full mb-4">
@@ -55,15 +55,24 @@ const { title, description, pubDate, updatedDate, heroImage, headings } =
       >
         <nav class="sticky top-8 max-h-full overflow-y-auto">
           <h3 class="text-lg font-semibold mb-2">Contents</h3>
-          <ul id="toc-list">
+          <ul id="toc-list text-sm font-normal list-none">
             {
               headings.map((heading) => (
-                <li>
+                <li
+                  class={clsx(
+                    'py-2',
+                    heading.depth === 1 && 'pl-0',
+                    heading.depth === 2 && 'pl-2',
+                    heading.depth === 3 && 'pl-4',
+                    heading.depth === 4 && 'pl-6',
+                    heading.depth === 5 && 'pl-8',
+                    heading.depth === 6 && 'pl-10',
+                  )}
+                >
                   <a
                     href={`#${heading.slug}`}
                     class={clsx(
-                      'text-primary/50 hover:underline transition-all duration-200 py-2 pl-2',
-                      `pl-${heading.depth * 2}`,
+                      'text-primary/50 hover:underline transition-all duration-200',
                     )}
                     data-target={`#${heading.slug}-section`}
                   >
@@ -111,6 +120,7 @@ const { title, description, pubDate, updatedDate, heroImage, headings } =
           if (!link) return;
 
           if (entry.isIntersecting) {
+            console.log(`Section ${entry.target.id} is intersecting`);
             link.classList.remove('text-primary/50');
             link.classList.add('text-primary');
           } else {

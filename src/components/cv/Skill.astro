@@ -1,0 +1,36 @@
+---
+type Props = {
+  name: string;
+  level: number;
+  subskills?: string[];
+  description?: string;
+};
+
+const { name, level, subskills, description } = Astro.props as Props;
+---
+
+<div>
+  <div class="flex items-center gap-2 justify-between">
+    <h3 class="font-semibold">{name}</h3>
+
+    <div class="h-2 w-32 bg-gray-400 rounded-lg">
+      <div class="h-full bg-sky-500 rounded-lg" style={{ width: `${level}%` }}>
+      </div>
+    </div>
+  </div>
+  <div class="ml-2">
+    {
+      subskills && (
+        <ul class="ml-0.5">
+          {subskills.map((subskill) => (
+            <li class="grid grid-cols-[auto_1fr] items-center gap-2">
+              <div class="bg-gray-400 rounded-full h-1.5 w-1.5" />
+              <span class="flex-1">{subskill}</span>
+            </li>
+          ))}
+        </ul>
+      )
+    }
+    {description && <p>{description}</p>}
+  </div>
+</div>

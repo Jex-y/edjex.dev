@@ -1,0 +1,231 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Experience from '../components/cv/Experience.astro';
+import Section from '../components/cv/Section.astro';
+import Skill from '../components/cv/Skill.astro';
+---
+
+<BaseLayout title="Ed Jex CV" description="Ed Jex's CV">
+  <style>
+    @media print {
+      * {
+        -webkit-print-color-adjust: exact !important;
+        color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      #cv {
+        position: absolute;
+        top: 0;
+        left: 0;
+
+        width: 210mm;
+        height: 297mm;
+      }
+    }
+  </style>
+  <main class="w-full container px-4 mx-auto">
+    <div
+      id="cv"
+      class="w-[210mm] h-[297mm] text-xs mx-auto p-6 bg-white text-black overflow-hidden scale-[calc(min(100vh -4rem, 210mm) / 210mm)]"
+    >
+      <div class="flex flex-row gap-4 items-center justify-between mb-1">
+        <h1
+          class="text-4xl font-bold font-montserrat antialiased text-transparent bg-clip-text inline-block bg-gradient-to-r from-sky-500 to-blue-500 pb-1"
+        >
+          Edward Jex
+        </h1>
+        <ul
+          class="font-semibold content-end h-full grid grid-cols-3 gap-x-4 gap-y-1 text-end"
+        >
+          <li>
+            <a href="mailto:edwardjex@live.co.uk">edwardjex@live.co.uk</a>
+          </li>
+          <li>
+            <a href="tel:+447917572525">+44 7917 57 2525</a>
+          </li>
+          <li><a href="https://edjex.dev">edjex.dev</a></li>
+          <li>
+            <a href="https://github.com/Jex-y">GitHub/Jex-y</a>
+          </li>
+          <li>
+            <a href="https://www.linkedin.com/in/ed-jex/">LinkedIn/ed-jex</a>
+          </li>
+        </ul>
+      </div>
+      <p class="mb-2">
+        I recently graduated top in my cohort with an MEng in Computer Science
+        from Durham University. I have a strong academic background in deep
+        learning, and industry experience in software development.
+        <br />
+        For my final project, I researched energy-efficient deep learning object
+        detection on edge devices for robotics.
+        <br />
+        My interests include edge / tiny scale deep learning for computer vision
+        and reinforcement learning. I often work on personal projects e.g. using
+        deep learning to{' '}
+        <a href="https://river.edjex.dev">
+          {' '}
+          forecast the river level
+        </a>{' '}
+        in Durham.
+      </p>
+      <div class="grid grid-cols-2 gap-4">
+        <div class="grid gap-2">
+          <Section title="Education">
+            <Experience
+              title="Durham University"
+              subtitle="Computer Science MEng"
+              date="2021 - 2025"
+            >
+              <p class="ml-2">
+                Graduated with a 1st, 82% average with 86% in my final year.
+                Scored top in my cohort overall, top in the final project (91%),
+                and was the only student to score above an 80% average. Modules
+                include: Deep Learning (90%), Reinforcement Learning (90%),
+                Computer Vision (80%), Advanced Computer Vision (75%), Advanced
+                Algorithms (88%), Quantum Computing (89%), and Parallel
+                Scientific Computing (83%).
+              </p>
+            </Experience>
+            <Experience
+              title="A Levels"
+              subtitle="4 A*s: Maths, Further Maths, Physics, Computer Science"
+              date="2019 - 2021"
+            />
+          </Section>
+          <Section title="Skills">
+            <Skill
+              name="Deep Learning | AI"
+              level={100}
+              subskills={[
+                'Proficient with Pytorch and Scikit-learn, some experience with JAX',
+                'Computer Vision: Theoretical and practical work with SOTA models for classification, object detection, and segmentation',
+                'Generative Models: Build and trained small transformers for image diffusion, classification, unpaired image to image / video to video transfer(Cycle-GAN / MoCycle-GAN)',
+                'Reinfocement Learning: Understaning and implementation of SOTA algorithms for continous environments. Experience with both model-free and model-based methods with MCTS.',
+                'Edge deployment: Deployment to Hailo accelerators and CPU targets. Experience with NAS, quantization, and pruning.',
+                'Hardware Aware Model Development: Experience measuring energy usage and throughput on edge devices',
+              ]}
+              description="Skills developed and proven through university coursework, final project and personal projects"
+            />
+            <Skill
+              name="Web Development"
+              level={95}
+              subskills={['Typescript, React, Redux, Next.js, TailwindCSS']}
+              description="I have experience building web applications with modern technologies. This CV is built with React and TailwindCSS."
+            />
+            <Skill
+              name="Rust"
+              level={95}
+              subskills={[
+                'Deep learning model deployment with ONNX runtime',
+                'Web service development with Axum',
+              ]}
+              description="I have experience with Rust through personal projects."
+            />
+            <Skill
+              name="DevOps"
+              level={90}
+              subskills={[
+                'Continous Integration and Deployment',
+                'GCP and AWS + Infrastructure as Code',
+                'Linux / Unix command line skills',
+              ]}
+              description="At Cisco I worked with CI/CD pipelines on Jenkins. For each of my personal projects I aim to build CI/CD pipelines and deploy to cloud platforms."
+            />
+            <Skill
+              name="C/C++"
+              level={75}
+              description="Experience with C/C++ from university coursework."
+            />
+          </Section>
+        </div>
+        <div class="grid gap-2">
+          <Section title="Projects">
+            <Experience
+              title="Energy Efficient Deep Learning Object Detection on Edge Devices"
+            >
+              <p class="ml-2">
+                For my final year project, I analysed the energy usage of object
+                detection model on a Hailo 8L accelerator and optimised this
+                using NAS method, implemented with a distributed pipeline. I
+                recieved a mark of 91% for this project, the highest in my
+                cohort and am in the process of publishing the results.
+              </p>
+            </Experience>
+
+            <Experience title="River Level Forecasting">
+              <p class="ml-2">
+                I developed and deployed a deep learning model that forecasts
+                the river level in Durham. The predictions can be viewed through
+                a{' '}
+                <a href="https://river.edjex.dev"> web dashboard </a>
+                . This allows rowing clubs to make informed decisions about when
+                to schedule sessions. The model is run using ONNX runtime and a Rust
+                web server.
+              </p>
+            </Experience>
+          </Section>
+          <Section title="Experience">
+            <Experience
+              title="Undergraduate Teaching Assistant"
+              subtitle="Department of Computer Science"
+              date="2023 - 2025"
+            >
+              <p class="ml-2">
+                I assisted in the delivery of the 1<sup>st</sup> year Computation
+                Thinking and <sup>2nd</sup> year Networks and Systems courses by
+                running lab sessions. This involved helping students with weekly
+                assignments, answering questions, and explaining concepts. Students
+                have a wide range of abilities and backgrounds, requiring me to be
+                able to explain concepts in multiple ways and adapt to different
+                learning styles.
+              </p>
+            </Experience>
+            <Experience
+              title="Cisco Web Development Intern"
+              subtitle="Webex Web Client"
+              date="Summer 2022"
+            >
+              <p class="ml-2">
+                I worked on the Webex web client team, developing new features
+                and fixing bugs. Through this I gained experience with React and
+                Redux and learned how to work on software as part of a team.
+                Specific achievements include overhauling the implementation of
+                rich message content, migrating the build system, and
+                implementation of several UI components to a design
+                specification.
+              </p>
+            </Experience>
+
+            <Experience
+              title="Boat Club President"
+              subtitle="Trevelyan College Boat Club"
+              date="2023 - 2024"
+            >
+              <p class="ml-2">
+                This role encompassed running the finances of the club,
+                organizing training and racing events, and managing the other
+                members of the committee. Over the year, we succeeded in
+                replacing aging equipment, increasing the number of members, and
+                improving the club's racing performance. This role pushed me to
+                develop my leadership, organization, time, project, and team
+                management skills, all of which are transferable to a
+                professional environment.
+              </p>
+            </Experience>
+            <Experience
+              title="Durham College Rowing Webmaster"
+              subtitle="Durham College Rowing"
+              date="2024 - 2025"
+            >
+              <p class="ml-2">
+                As webmaster, I was responsible for maintaining and updating the
+                DCR website.
+              </p>
+            </Experience>
+          </Section>
+        </div>
+      </div>
+    </div>
+  </main>
+</BaseLayout>

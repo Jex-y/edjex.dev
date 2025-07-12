@@ -7,17 +7,29 @@ import Footer from '@/components/Footer.astro';
 type Props = {
   title: string;
   description: string;
+  image?: ImageMetadata;
 };
 
-const { title, description } = Astro.props;
+const { title, description, image } = Astro.props;
 ---
 
 <!doctype html>
 <html lang="en">
   <head>
-    <BaseHead title={title} description={description} />
-  </head>
-  <body
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-QV4FGCX0ZG"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag('js', new Date());
+
+      gtag('config', 'G-QV4FGCX0ZG');
+    </script>
+    <BaseHead title={title} description={description} image={image} />
+  </head><body
     class="min-h-screen text-foreground bg-background font-sans antialiased flex flex-col"
   >
     <Header />

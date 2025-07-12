@@ -7,24 +7,29 @@ import { rehypeSectionize } from './plugins/rehype-sectionize.js';
 import rehypeFigure from '@microflash/rehype-figure';
 import rehypeSlug from 'rehype-slug';
 
+import pdf from 'astro-pdf';
+
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://edjex.dev',
-  integrations: [],
-  markdown: {
-    remarkPlugins: [
-      remarkReadingTime,
-      remarkModifiedTime,
+        site: 'https://edjex.dev',
+        integrations: [pdf({
+                pages: { '/cv': { path: '/cv.pdf' } },
+                launch: { args: ['--no-sandbox',] },
+        })],
+        markdown: {
+                remarkPlugins: [
+                        remarkReadingTime,
+                        remarkModifiedTime,
 
-    ],
-    rehypePlugins: [
-      rehypeSlug,
-      rehypeSectionize,
-      rehypeFigure,
-    ]
-  },
+                ],
+                rehypePlugins: [
+                        rehypeSlug,
+                        rehypeSectionize,
+                        rehypeFigure,
+                ]
+        },
 
-  vite: {
-    plugins: [tailwindcss()],
-  },
+        vite: {
+                plugins: [tailwindcss()],
+        },
 });
