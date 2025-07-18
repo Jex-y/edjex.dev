@@ -26,11 +26,11 @@ import Skill from '../components/cv/Skill.astro';
   <main class="w-full container px-4 mx-auto">
     <div
       id="cv"
-      class="w-[210mm] h-[297mm] text-xs mx-auto p-6 bg-white text-black overflow-hidden scale-[calc(min(100vw -4rem, 297mm) / 297mm)]"
+      class="w-full lg:w-[210mm] lg:h-[297mm] text-xs p-6 bg-white text-black overflow-hidden mx-auto"
     >
       <div class="flex flex-row gap-4 items-center justify-between mb-1">
         <h1
-          class="text-4xl font-bold font-montserrat antialiased text-transparent bg-clip-text inline-block bg-gradient-to-r from-sky-500 to-blue-500 pb-1"
+          class="text-2xl md:text-4xl font-bold font-montserrat antialiased text-transparent bg-clip-text inline-block bg-gradient-to-r from-sky-500 to-blue-500 pb-1"
         >
           Edward Jex
         </h1>
@@ -66,7 +66,7 @@ import Skill from '../components/cv/Skill.astro';
         </a>{' '}
         in Durham.
       </p>
-      <div class="grid grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div class="grid gap-2">
           <Section title="Education">
             <Experience
@@ -227,5 +227,5 @@ import Skill from '../components/cv/Skill.astro';
     <div class="text-center text-gray-500 mt-8">
       <a class="text-link" href="/cv.pdf" target="_blank">Download PDF</a>
     </div>
-  </main></BaseLayout
->
+  </main>
+</BaseLayout>
