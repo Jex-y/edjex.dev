@@ -9,6 +9,7 @@ import rehypeSlug from 'rehype-slug';
 
 import pdf from 'astro-pdf';
 
+
 // https://astro.build/config
 export default defineConfig({
         site: 'https://edjex.dev',
