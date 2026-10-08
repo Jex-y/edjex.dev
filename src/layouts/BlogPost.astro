@@ -1,138 +1,48 @@
 ---
-import clsx from 'clsx';
 import BaseLayout from './BaseLayout.astro';
 import type { CollectionEntry } from 'astro:content';
 import FormattedDate from '../components/FormattedDate.astro';
-import { Image } from 'astro:assets';
+import { SITE_TITLE } from '../consts';
+import { sitePath } from '../lib/paths';
 
-type Props = CollectionEntry<'blog'>['data'] & {
-  headings: { text: string; slug: string; depth: number }[];
-};
+type Props = CollectionEntry<'blog'>['data'];
 
-const { title, description, pubDate, updatedDate, heroImage, headings } =
-  Astro.props;
+const { title, description, pubDate, byline, code, heroImage } = Astro.props;
+const home = sitePath('/');
 ---
 
 <BaseLayout title={title} description={description} image={heroImage}>
-  <main class="relative scroll-smooth">
-    <div class="container mx-auto max-w-4xl px-4">
-      <article class="w-full">
-        <div class="w-full mb-4">
-          {
-            heroImage && (
-              <Image
-                src={heroImage}
-                alt=""
-                class="rounded-lg m-2 lg:m-0 mb-4h-auto object-cover aspect-16/9 w-full"
-              />
-            )
-          }
-        </div>
-        <div>
-          <div class="mb-4">
-            <div>
-              <FormattedDate date={pubDate} />
-              {
-                updatedDate && (
-                  <div class="text-foreground/85">
-                    Last updated on <FormattedDate date={updatedDate} />
-                  </div>
-                )
-              }
-            </div>
-            <h1
-              class="font-extrabold text-4xl tracking-tight text-balance mb-2"
-            >
-              {title}
-            </h1>
-            <hr />
-          </div>
-          <slot />
-        </div>
-      </article>
-      <aside
-        class="hidden lg:block fixed right-4 top-24 w-64 h-[calc(100vh-6rem)]z-30"
-      >
-        <nav class="sticky top-8 max-h-full overflow-y-auto">
-          <h3 class="text-lg font-semibold mb-2">Contents</h3>
-          <ul id="toc-list text-sm font-normal list-none">
-            {
-              headings.map((heading) => (
-                <li
-                  class={clsx(
-                    'py-2',
-                    heading.depth === 1 && 'pl-0',
-                    heading.depth === 2 && 'pl-2',
-                    heading.depth === 3 && 'pl-4',
-                    heading.depth === 4 && 'pl-6',
-                    heading.depth === 5 && 'pl-8',
-                    heading.depth === 6 && 'pl-10',
-                  )}
-                >
-                  <a
-                    href={`#${heading.slug}`}
-                    class={clsx(
-                      'text-primary/50 hover:underline transition-all duration-200',
-                    )}
-                    data-target={`#${heading.slug}-section`}
-                  >
-                    {heading.text}
-                  </a>
-                </li>
-              ))
-            }
-          </ul>
-        </nav>
-      </aside>
+  <article class="page post">
+    <div class="row">
+      <nav class="main post-nav">
+        <a href={home}>{SITE_TITLE}</a>
+        {code && <a href={code}>Code</a>}
+      </nav>
     </div>
-  </main>
-</BaseLayout>
 
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const tocLinks = document.querySelectorAll('#toc-list a');
-    tocLinks.forEach((link) => {
-      link.addEventListener('click', (event) => {
-        event.preventDefault();
-        const targetId = link.getAttribute('data-target');
-        if (!targetId) return;
-        const targetElement = document.querySelector(targetId);
-        if (targetElement) {
-          targetElement.scrollIntoView({ behavior: 'smooth' });
+    <div class="row">
+      <header class="main post-header">
+        <h1>{title}</h1>
+        <p class="dek">{description}</p>
+        <p class="byline">{byline ?? <FormattedDate date={pubDate} />}</p>
+      </header>
+    </div>
+
+    <div class="post-body">
+      <slot />
+    </div>
+
+    <div class="row">
+      <p class="main post-foot">
+        {
+          code && (
+            <>
+              The code is at <a href={code}>{code.replace('https://', '')}</a>.
+            </>
+          )
         }
-      });
-    });
-  });
-
-  document.addEventListener('DOMContentLoaded', () => {
-    const tocLinks = document.querySelectorAll('#toc-list a');
-    const sections = Array.from(tocLinks).map((link) => {
-      const targetId = link.getAttribute('data-target');
-      if (!targetId) return null;
-      return document.querySelector(targetId);
-    });
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          const link = document.querySelector(
-            `#toc-list a[data-target="#${entry.target.id}"]`,
-          );
-          if (!link) return;
-
-          if (entry.isIntersecting) {
-            console.log(`Section ${entry.target.id} is intersecting`);
-            link.classList.remove('text-primary/50');
-            link.classList.add('text-primary');
-          } else {
-            link.classList.remove('text-primary');
-            link.classList.add('text-primary/50');
-          }
-        });
-      },
-      { rootMargin: '-10% 0px -10% 0px' },
-    );
-    sections.forEach((section) => {
-      if (section) observer.observe(section);
-    });
-  });
-</script>
+        Back to <a href={home}>{SITE_TITLE}</a>.
+      </p>
+    </div>
+  </article>
+</BaseLayout>

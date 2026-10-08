@@ -1,8 +1,9 @@
 ---
+import '@fontsource-variable/literata/opsz.css';
+import '@fontsource-variable/literata/opsz-italic.css';
 import '../styles/global.css';
+import Analytics from '../components/Analytics.astro';
 import BaseHead from '../components/BaseHead.astro';
-import Header from '@/components/Header.astro';
-import Footer from '@/components/Footer.astro';
 
 type Props = {
   title: string;
@@ -11,31 +12,20 @@ type Props = {
 };
 
 const { title, description, image } = Astro.props;
+const isLive = import.meta.env.BASE_URL === '/';
 ---
 
 <!doctype html>
 <html lang="en">
   <head>
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-QV4FGCX0ZG"
-    ></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag() {
-        dataLayer.push(arguments);
-      }
-      gtag('js', new Date());
-
-      gtag('config', 'G-QV4FGCX0ZG');
+    <script is:inline>
+      document.documentElement.classList.add('js');
     </script>
+    {isLive && <Analytics />}
     <BaseHead title={title} description={description} image={image} />
-  </head><body
-    class="min-h-screen text-foreground bg-background font-sans antialiased flex flex-col"
-  >
-    <Header />
-    <div class="flex-1">
-      <slot />
-    </div>
-    <Footer />
+    <slot name="head" />
+  </head>
+  <body class="antialiased">
+    <slot />
   </body>
 </html>

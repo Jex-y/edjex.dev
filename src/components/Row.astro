@@ -1,0 +1,22 @@
+---
+const hasLeft = Astro.slots.has('left');
+const hasRight = Astro.slots.has('right');
+---
+
+<div class="row full">
+  <div class="main stack"><slot /></div>
+  {
+    hasLeft && (
+      <aside class="left">
+        <slot name="left" />
+      </aside>
+    )
+  }
+  {
+    hasRight && (
+      <aside class="right">
+        <slot name="right" />
+      </aside>
+    )
+  }
+</div>

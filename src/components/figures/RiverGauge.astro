@@ -1,0 +1,46 @@
+---
+const MARKS = [8, 19, 30, 41, 52, 63, 74, 85, 96, 107].map((y, i) => ({
+  y,
+  x: i % 2 ? 22 : 10,
+}));
+---
+
+<figure>
+  <svg
+    viewBox="0 0 270 120"
+    width="100%"
+    role="img"
+    aria-label="A small river gauge showing the current level and the six-hour forecast"
+  >
+    <rect
+      x="10"
+      y="4"
+      width="24"
+      height="112"
+      fill="#ffffff"
+      stroke="#000000"
+      stroke-width="0.9"></rect>
+    {
+      MARKS.map(({ x, y }) => (
+        <rect x={x} y={y} width="12" height="2" fill="#000000" />
+      ))
+    }
+    <rect x="10" y="76" width="24" height="40" fill="rgba(44,109,181,0.22)"
+    ></rect>
+    <line x1="4" y1="76" x2="40" y2="76" stroke="#2c6db5" stroke-width="1.4"
+    ></line>
+    <line
+      x1="4"
+      y1="64"
+      x2="40"
+      y2="64"
+      stroke="#000000"
+      stroke-width="0.9"
+      stroke-dasharray="3 3"></line>
+    <text x="50" y="68" font-size="12" fill="#000000">in six hours</text>
+    <text x="50" y="88" font-size="12" fill="#2c6db5">now</text>
+  </svg>
+  <figcaption>
+    The Wear at Durham: the level now, and the forecast. Schematic.
+  </figcaption>
+</figure>

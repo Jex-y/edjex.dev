@@ -1,0 +1,18 @@
+---
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+
+type Props = { src: ImageMetadata; alt: string };
+
+const { src, alt } = Astro.props;
+---
+
+<figure class="wide-figure full">
+  <Image
+    src={src}
+    alt={alt}
+    widths={[800, 1200, 2240]}
+    sizes="(min-width: 1200px) 1120px, 100vw"
+  />
+  <figcaption><slot /></figcaption>
+</figure>

@@ -1,0 +1,45 @@
+---
+const STREAM_TICKS = [4, 14, 24, 40, 52, 64, 76, 88, 100, 108];
+---
+
+<figure>
+  <svg
+    viewBox="0 0 270 118"
+    width="100%"
+    role="img"
+    aria-label="Schematic of one agent step: tools one at a time, then the same tools run at once with results streamed"
+  >
+    <text x="0" y="10" font-style="italic" font-size="11" fill="#5f5f5f"
+      >one at a time</text
+    >
+    <rect x="0" y="16" width="36" height="9" fill="#000000"></rect>
+    <rect x="37" y="16" width="34" height="9" fill="#a7a7a7"></rect>
+    <rect x="72" y="16" width="34" height="9" fill="#cdcdcd"></rect>
+    <rect x="107" y="16" width="30" height="9" fill="#a7a7a7"></rect>
+    <rect x="138" y="16" width="36" height="9" fill="#000000"></rect>
+    <line x1="177" y1="12" x2="177" y2="29" stroke="#000000" stroke-width="1"
+    ></line>
+    <text x="0" y="52" font-style="italic" font-size="11" fill="#5f5f5f"
+      >at once, streamed</text
+    >
+    <rect x="0" y="58" width="36" height="9" fill="#000000"></rect>
+    <rect x="37" y="69" width="34" height="7" fill="#a7a7a7"></rect>
+    <rect x="37" y="78" width="30" height="7" fill="#cdcdcd"></rect>
+    <rect x="37" y="87" width="26" height="7" fill="#a7a7a7"></rect>
+    <rect x="72" y="58" width="36" height="9" fill="#000000"></rect>
+    <line x1="111" y1="54" x2="111" y2="108" stroke="#000000" stroke-width="1"
+    ></line>
+    {
+      STREAM_TICKS.map((x) => (
+        <rect x={x} y="99" width="2" height="7" fill="#000000" />
+      ))
+    }
+    <text x="270" y="116" text-anchor="end" font-size="10" fill="#5f5f5f"
+      >time →</text
+    >
+  </svg>
+  <figcaption>
+    One agent step. Black is the model, grey the tools, and the ticks are
+    updates reaching the browser. Schematic.
+  </figcaption>
+</figure>

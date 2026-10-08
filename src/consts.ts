@@ -1,4 +1,7 @@
 export const SITE_TITLE = 'Ed Jex';
-export const SITE_DESCRIPTION = 'Ed Jex - Recently graduated top of my cohort from a masters in Computer Science at Durham University. I am currently working as a full stack developed at Solve Intelligence, building AI tools for the pattent application process.';
+export const SITE_DESCRIPTION =
+  'Ed Jex is a software engineer at Solve Intelligence, building AI tools for patent attorneys. Computer science at Durham, a thesis on microjoule object detection, and a forecast of the River Wear.';
 export const SITE_URL = 'https://edjex.dev';
 export const GITHUB_URL = 'https://github.com/Jex-y';
+export const LINKEDIN_URL = 'https://www.linkedin.com/in/ed-jex/';
+export const EMAIL = 'edwardjex@live.co.uk';

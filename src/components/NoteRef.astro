@@ -1,0 +1,37 @@
+---
+type Props = { n: number };
+
+const { n } = Astro.props;
+---
+
+<button
+  type="button"
+  class="noteref"
+  data-note={`note-${n}`}
+  aria-controls={`note-${n}`}
+  aria-expanded="true"
+  aria-label={`Note ${n}`}>{n}</button
+>
+
+<script>
+  const wide = window.matchMedia('(min-width: 1180px)');
+  const refs = [
+    ...document.querySelectorAll<HTMLButtonElement>('button[data-note]'),
+  ];
+  const noteFor = (ref: HTMLButtonElement) =>
+    document.getElementById(ref.dataset.note ?? '');
+  const sync = () =>
+    refs.forEach((ref) => {
+      const open = wide.matches || noteFor(ref)?.hasAttribute('data-open');
+      ref.setAttribute('aria-expanded', String(Boolean(open)));
+    });
+
+  refs.forEach((ref) =>
+    ref.addEventListener('click', () => {
+      noteFor(ref)?.toggleAttribute('data-open');
+      sync();
+    }),
+  );
+  wide.addEventListener('change', sync);
+  sync();
+</script>

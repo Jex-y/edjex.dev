@@ -1,0 +1,107 @@
+---
+title: Object detection on a microjoule budget
+description: How changing the question, rather than shrinking the model, cut the energy of watching water fleas by a factor of 680.
+pubDate: 'Jul 9 2025'
+byline: MEng thesis, Durham University, July 2025. Supervised by Dr Farshad Arvin.
+code: https://github.com/Jex-y/lpcv-project-implementation
+heroImage: './final-year-project-assets/project-setup.jpg'
+draft: false
+---
+
+import { Image } from 'astro:assets';
+import Row from '../../components/Row.astro';
+import Note from '../../components/Note.astro';
+import NoteRef from '../../components/NoteRef.astro';
+import WideFigure from '../../components/WideFigure.astro';
+import BoxesVsPoints from '../../components/figures/BoxesVsPoints.astro';
+import EnergyAxis from '../../components/figures/EnergyAxis.astro';
+import NetGlyph from '../../components/figures/NetGlyph.astro';
+import daphnia from './final-year-project-assets/dapnia.png';
+import bench from './final-year-project-assets/experiment-setup.jpg';
+
+## The constraint
+
+<Row>
+
+Project Robocoenosis builds underwater devices that use living organisms as sensors. They run on microbial fuel cells, so every millijoule decides how often they can look.
+
+Water fleas spin when something in the water stresses them, which makes them a cheap detector for pollutants nobody thought to test for.<NoteRef n={1} /> Watching them needs computer vision on the device itself, because radio does not get out of the water and storing video is not real time.
+
+<Note slot="left" n={1}>*Daphnia*, a few millimetres long. Healthy ones swim in short hops; stressed ones go round in circles.</Note>
+
+<figure slot="right">
+  <Image src={daphnia} alt="Water fleas in a tank" width={560} />
+  <figcaption>*Daphnia* in the water.</figcaption>
+</figure>
+
+</Row>
+
+## Points, not boxes
+
+<Row>
+
+A standard detector predicts boxes and classes at several scales, through tens of layers. Water fleas are all about the same size, and only where they are and how they move matters. So the model predicts one heatmap peak per animal, in the style of CenterNet,<NoteRef n={2} /> and everything else a detector carries is thrown away.
+
+<BoxesVsPoints>Left, what a standard detector predicts; right, what this one predicts: one point per animal and a small offset.</BoxesVsPoints>
+
+<Note slot="right" n={2}>Zhou, Wang and Krähenbühl, *Objects as Points*, 2019.</Note>
+
+</Row>
+
+## Search, then measure
+
+<Row>
+
+I sampled five hundred architectures at random, varying depth, input resolution, width and block type, and trained them across a GPU cluster. Each was quantised to eight bits and compiled for the accelerator.<NoteRef n={3} />
+
+Then every one of them ran on the bench. Estimating energy from the architecture works on a CPU but not on an accelerator, so there was no shortcut past measuring.<NoteRef n={4} />
+
+<Note slot="left" n={3}>Compiled with the Hailo toolchain for a Hailo-8L on a Raspberry Pi 5.</Note>
+
+<Note slot="right" n={4}>On the CPU, architectural features explain 80% of the variance in energy. On the accelerator, 15%.</Note>
+
+</Row>
+
+<WideFigure src={bench} alt="A precision power supply wired to a Raspberry Pi 5 with a Hailo-8L accelerator">A Keithley 2280S fed the Raspberry Pi and sampled its current at 100 Hz, triggered over GPIO, with Wi-Fi off and a cool-down between runs.</WideFigure>
+
+## Two convolutions and a head
+
+<Row>
+
+The best model on the Pareto front, KEYNAS5-204, is three layers deep: two convolutions and a detection head. It reaches an average precision of 0.948 at 2.2 µJ a frame, and runs at 5,167 frames a second.
+
+<figure>
+
+| Model       | Energy per frame | Frames per second |
+| :---------- | ---------------: | ----------------: |
+| YOLO11-nano |         1,449 µJ |                73 |
+| KEYNAS5-204 |           2.2 µJ |             5,167 |
+
+<figcaption>Measured on a Raspberry Pi 5 with a Hailo-8L.</figcaption>
+
+</figure>
+
+A few things surprised me. Every model on the Pareto front has five layers or fewer.<NoteRef n={5} /> On the accelerator, speed and energy are almost the same thing.<NoteRef n={6} /> And dropping to four bits saved nothing measurable over eight.
+
+<figure slot="left">
+  <NetGlyph
+    width={150}
+    height={96}
+    radius={4}
+    label="Diagram of a three-layer network"
+    layers={[
+      { x: 16, ys: [14, 34, 54, 74] },
+      { x: 75, ys: [8, 26, 44, 62, 80] },
+      { x: 134, ys: [30, 58] },
+    ]}
+  />
+  <figcaption>KEYNAS5-204, schematically.</figcaption>
+</figure>
+
+<Note slot="left" n={5}>Even a 56×56 input still reaches an average precision above 0.5.</Note>
+
+<EnergyAxis slot="right">Energy per frame in µJ, log scale.</EnergyAxis>
+
+<Note slot="right" n={6}>Latency and energy correlate at r² = 0.9966 on the Hailo-8L.</Note>
+
+</Row>

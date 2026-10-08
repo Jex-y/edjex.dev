@@ -1,0 +1,79 @@
+---
+const FLEAS = [
+  { x: 52, y: 46 },
+  { x: 160, y: 34 },
+  { x: 118, y: 112 },
+  { x: 214, y: 126 },
+  { x: 40, y: 136 },
+];
+---
+
+<figure>
+  <div class="pair">
+    <svg
+      viewBox="0 0 280 180"
+      width="100%"
+      role="img"
+      aria-label="Five water fleas each enclosed by a bounding box"
+    >
+      <rect
+        x="0.5"
+        y="0.5"
+        width="279"
+        height="179"
+        fill="none"
+        stroke="#000000"
+        stroke-width="0.8"></rect>
+      {
+        FLEAS.map(({ x, y }) => (
+          <rect
+            x={x - 17}
+            y={y - 14}
+            width="34"
+            height="28"
+            fill="none"
+            stroke="#000000"
+            stroke-width="1"
+          />
+        ))
+      }
+    </svg>
+    <svg
+      viewBox="0 0 280 180"
+      width="100%"
+      role="img"
+      aria-label="The same five water fleas each marked by a single point"
+    >
+      <rect
+        x="0.5"
+        y="0.5"
+        width="279"
+        height="179"
+        fill="none"
+        stroke="#000000"
+        stroke-width="0.8"></rect>
+      {
+        FLEAS.map(({ x, y }) => (
+          <>
+            <circle cx={x} cy={y} r="11" fill="rgba(0,0,0,0.08)" />
+            <circle cx={x} cy={y} r="3.2" fill="#000000" />
+          </>
+        ))
+      }
+    </svg>
+  </div>
+  <figcaption><slot /></figcaption>
+</figure>
+
+<style>
+  figure {
+    gap: 10px;
+    margin-top: 4px;
+  }
+
+  .pair {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+</style>

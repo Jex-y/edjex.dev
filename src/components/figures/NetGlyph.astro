@@ -1,0 +1,49 @@
+---
+type Props = {
+  width: number;
+  height: number;
+  /** One entry per layer: its x position and the y of each node. */
+  layers: { x: number; ys: number[] }[];
+  radius: number;
+  label?: string;
+};
+
+const { width, height, layers, radius, label } = Astro.props;
+
+const nodes = layers.flatMap(({ x, ys }) => ys.map((y) => ({ x, y })));
+const edges = layers.slice(1).flatMap((layer, i) =>
+  layers[i].ys.flatMap((y1) =>
+    layer.ys.map((y2) => ({
+      x1: layers[i].x,
+      y1,
+      x2: layer.x,
+      y2,
+    })),
+  ),
+);
+---
+
+<svg
+  viewBox={`0 0 ${width} ${height}`}
+  width={width}
+  height={height}
+  role={label ? 'img' : undefined}
+  aria-label={label}
+  aria-hidden={label ? undefined : 'true'}
+>
+  <g stroke="#000000" stroke-width={radius / 5} opacity="0.7">
+    {edges.map((edge) => <line {...edge} />)}
+  </g>
+  {
+    nodes.map((node) => (
+      <circle
+        cx={node.x}
+        cy={node.y}
+        r={radius}
+        fill="#ffffff"
+        stroke="#000000"
+        stroke-width="0.9"
+      />
+    ))
+  }
+</svg>

@@ -1,0 +1,10 @@
+---
+type Props = { n: number };
+
+const { n } = Astro.props;
+---
+
+<div class="note" id={`note-${n}`}>
+  <span><sup>{n}</sup><slot /></span>
+  <slot name="figure" />
+</div>

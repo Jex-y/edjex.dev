@@ -3,10 +3,23 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import Experience from '../components/cv/Experience.astro';
 import Section from '../components/cv/Section.astro';
 import Skill from '../components/cv/Skill.astro';
+import { sitePath } from '../lib/paths';
 ---
 
 <BaseLayout title="Ed Jex CV" description="Ed Jex's CV">
+  <link
+    slot="head"
+    rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&display=swap"
+  />
   <style>
+    #cv a {
+      font-weight: 700;
+    }
+    .download {
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
     @media print {
       * {
         -webkit-print-color-adjust: exact !important;
@@ -23,10 +36,10 @@ import Skill from '../components/cv/Skill.astro';
       }
     }
   </style>
-  <main class="w-full container px-4 mx-auto">
+  <main class="w-full container px-4 py-8 mx-auto">
     <div
       id="cv"
-      class="w-full lg:w-[210mm] lg:h-[297mm] text-xs p-6 bg-white text-black overflow-hidden mx-auto"
+      class="w-full lg:w-[210mm] lg:h-[297mm] font-sans text-xs p-6 bg-white text-black overflow-hidden mx-auto"
     >
       <div class="flex flex-row gap-4 items-center justify-between mb-1">
         <h1
@@ -230,7 +243,7 @@ import Skill from '../components/cv/Skill.astro';
       </div>
     </div>
     <div class="text-center text-gray-500 mt-8">
-      <a class="text-link" href="/cv.pdf" target="_blank">Download PDF</a>
+      <a class="download" href={sitePath('/cv.pdf')} target="_blank">Download PDF</a>
     </div>
   </main>
 </BaseLayout>

@@ -1,6 +1,6 @@
 ---
-title: Cisco Internship Summer 2022
-description: Cisco
+title: Cisco internship, summer 2022
+description: Twelve weeks on the Webex web client.
 pubDate: 2022-09-08
 heroImage: ../../assets/cisco-internship/logo.jpeg
 ---

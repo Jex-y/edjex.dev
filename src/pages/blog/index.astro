@@ -1,41 +1,22 @@
 ---
-import clsx from 'clsx';
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import PostList from '../../components/PostList.astro';
 import { SITE_TITLE, SITE_DESCRIPTION } from '../../consts';
-import { getCollection } from 'astro:content';
-import FormattedDate from '../../components/FormattedDate.astro';
-import { Image } from 'astro:assets';
-
-// Don't display draft posts
-const posts = (await getCollection('blog'))
-  .filter((post) => post.data.draft !== true && post.data.pubDate <= new Date())
-  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+import { sitePath } from '../../lib/paths';
 ---
 
-<BaseLayout title={SITE_TITLE} description={SITE_DESCRIPTION}>
-  <main class="container mx-auto max-w-5xl">
-    <ul class="grid gap-4 grid-cols-2 mx-4">
-      {
-        posts.map((post, index) => (
-          <li class={clsx(index === 0 && 'col-span-2')}>
-            <a href={`/blog/${post.id}/`}>
-              {post.data.heroImage && (
-                <Image
-                  src={post.data.heroImage}
-                  alt=""
-                  class="rounded-lg aspect-16/9 mb-2 w-full h-auto object-cover hover:brightness-90 transition duration-200 ease-in-out hover:scale-[99%]"
-                />
-              )}
-              <div>
-                <h4 class="font-semibold hover:underline">{post.data.title}</h4>
-                <p class="text-foreground/80 hover:text-foreground/85 transition duration-100">
-                  <FormattedDate date={post.data.pubDate} />
-                </p>
-              </div>
-            </a>
-          </li>
-        ))
-      }
-    </ul>
+<BaseLayout title={`Writing · ${SITE_TITLE}`} description={SITE_DESCRIPTION}>
+  <main class="page post">
+    <div class="row">
+      <nav class="main post-nav">
+        <a href={sitePath('/')}>{SITE_TITLE}</a>
+      </nav>
+    </div>
+    <div class="row">
+      <header class="main post-header">
+        <h1>Writing</h1>
+      </header>
+    </div>
+    <PostList />
   </main>
 </BaseLayout>

@@ -1,0 +1,20 @@
+---
+import { getCollection } from 'astro:content';
+import FormattedDate from './FormattedDate.astro';
+import { sitePath } from '../lib/paths';
+
+const posts = (await getCollection('blog'))
+  .filter((post) => post.data.draft !== true && post.data.pubDate <= new Date())
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+---
+
+<ul class="post-list">
+  {
+    posts.map((post) => (
+      <li>
+        <a href={sitePath(`/blog/${post.id}/`)}>{post.data.title}</a>
+        <FormattedDate date={post.data.pubDate} />
+      </li>
+    ))
+  }
+</ul>
