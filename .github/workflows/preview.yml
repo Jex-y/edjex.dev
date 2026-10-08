@@ -1,0 +1,94 @@
+name: Branch preview on the tailnet
+on:
+  push:
+    branches-ignore:
+      - main
+  delete:
+
+permissions:
+  contents: read
+
+# Runs once the repository variables name a deploy host (see deploy/preview/README.md).
+# Repository rather than environment variables, because a job's `if` is evaluated before it enters its environment.
+jobs:
+  slug:
+    if: vars.DEPLOY_HOST != '' && (github.event_name == 'push' || github.event.ref_type == 'branch')
+    runs-on: ubuntu-latest
+    outputs:
+      slug: ${{ steps.slug.outputs.slug }}
+    steps:
+      - id: slug
+        env:
+          BRANCH: ${{ github.event_name == 'push' && github.ref_name || github.event.ref }}
+        run: |
+          slug=$(printf '%s' "$BRANCH" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+//' | cut -c1-63 | sed -E 's/-+$//')
+          [ -n "$slug" ] || { echo "no usable slug for branch: $BRANCH" >&2; exit 1; }
+          echo "slug=$slug" >> "$GITHUB_OUTPUT"
+
+  publish:
+    needs: slug
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment:
+      name: preview
+      url: https://edjex-preview.tail12605.ts.net/${{ needs.slug.outputs.slug }}/
+    concurrency:
+      group: preview-${{ needs.slug.outputs.slug }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+        env:
+          PREVIEW_BASE: /${{ needs.slug.outputs.slug }}/
+      - uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:ci
+          ping: ${{ vars.DEPLOY_HOST }}
+      - name: Publish over SSH
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ vars.DEPLOY_USER }}
+          DEPLOY_KNOWN_HOST: ${{ vars.DEPLOY_KNOWN_HOST }}
+          SLUG: ${{ needs.slug.outputs.slug }}
+        run: |
+          install -m 700 -d ~/.ssh
+          install -m 600 /dev/null ~/.ssh/deploy
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy
+          printf '%s\n' "$DEPLOY_KNOWN_HOST" >> ~/.ssh/known_hosts
+          tar -C dist -cf - . | ssh -i ~/.ssh/deploy -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            "$DEPLOY_USER@$DEPLOY_HOST" "publish $SLUG"
+
+  remove:
+    needs: slug
+    if: github.event_name == 'delete'
+    runs-on: ubuntu-latest
+    environment: preview
+    steps:
+      - uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:ci
+          ping: ${{ vars.DEPLOY_HOST }}
+      - name: Delete over SSH
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ vars.DEPLOY_USER }}
+          DEPLOY_KNOWN_HOST: ${{ vars.DEPLOY_KNOWN_HOST }}
+          SLUG: ${{ needs.slug.outputs.slug }}
+        run: |
+          install -m 700 -d ~/.ssh
+          install -m 600 /dev/null ~/.ssh/deploy
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy
+          printf '%s\n' "$DEPLOY_KNOWN_HOST" >> ~/.ssh/known_hosts
+          ssh -i ~/.ssh/deploy -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            "$DEPLOY_USER@$DEPLOY_HOST" "delete $SLUG" < /dev/null

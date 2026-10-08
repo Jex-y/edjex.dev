@@ -1,0 +1,48 @@
+# Tailnet-only branch previews on the NAS. setup.sh copies this directory to $PREVIEW_DIR there and runs it as the
+# Compose project `edjex-preview`; the sidecar's auth key comes from $PREVIEW_DIR/.env.
+#
+# Caddy shares the tailscale sidecar's network namespace and binds to loopback, so the stack publishes no host
+# ports and is reachable only through `tailscale serve`. Each branch is a directory under ./sites, written by
+# publish.sh.
+name: edjex-preview
+
+services:
+  tailscale:
+    image: tailscale/tailscale:v1.102.4
+    hostname: edjex-preview
+    restart: unless-stopped
+    environment:
+      TS_AUTHKEY: ${TS_AUTHKEY:-}
+      TS_AUTH_ONCE: "true"
+      TS_EXTRA_ARGS: --advertise-tags=tag:apps
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_SERVE_CONFIG: /stack/serve.json
+      TS_ENABLE_HEALTH_CHECK: "true"
+      TS_LOCAL_ADDR_PORT: 127.0.0.1:9002
+    volumes:
+      - tailscale-state:/var/lib/tailscale
+      - ./serve.json:/stack/serve.json:ro
+    mem_limit: 96m
+    cpu_shares: 256
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:9002/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+      start_period: 20s
+
+  web:
+    image: caddy:2-alpine
+    network_mode: service:tailscale
+    restart: unless-stopped
+    depends_on:
+      tailscale:
+        condition: service_healthy
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./sites:/srv:ro
+    mem_limit: 48m
+    cpu_shares: 256
+
+volumes:
+  tailscale-state:
