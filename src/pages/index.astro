@@ -10,6 +10,7 @@ import ChartAgents from '../components/figures/ChartAgents.astro';
 import EnergyAxis from '../components/figures/EnergyAxis.astro';
 import ManyCharts from '../components/figures/ManyCharts.astro';
 import ParetoFront from '../components/figures/ParetoFront.astro';
+import LiveDetector from '../components/figures/LiveDetector.astro';
 import LifeGraph from '../components/figures/LifeGraph.astro';
 import NetGlyph from '../components/figures/NetGlyph.astro';
 import RiverGauge from '../components/figures/RiverGauge.astro';
@@ -214,6 +215,10 @@ const cisco = sitePath('/blog/cisco-internship/');
           The 22 models on the Pareto front, out of five hundred measured on the
           device.
         </ParetoFront>
+        <LiveDetector>
+          The thesis model running in your browser on held-out frames from the
+          dataset. Left, each detection; right, the heatmap it came from.
+        </LiveDetector>
       </Fragment>
     </Row>
 

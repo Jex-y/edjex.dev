@@ -1,0 +1,82 @@
+---
+import weights from '../../assets/detector/keynas5-204.bin?url';
+
+const frames = Object.values(
+  import.meta.glob<string>('../../assets/detector/frames/*.jpg', {
+    eager: true,
+    query: '?url',
+    import: 'default',
+  }),
+);
+---
+
+<figure
+  class="live-detector"
+  data-weights={weights}
+  data-frames={JSON.stringify(frames)}
+>
+  <div class="panes">
+    <canvas class="frame" width="320" height="240"></canvas>
+    <canvas class="heat" width="96" height="96" aria-hidden="true"></canvas>
+  </div>
+  <div class="controls">
+    <p class="status" aria-live="polite">Loading the model…</p>
+    <button type="button" disabled>Next frame</button>
+  </div>
+  <figcaption><slot /></figcaption>
+</figure>
+
+<script>
+  import { mountLiveDetector } from '../../scripts/detector/figure';
+
+  document
+    .querySelectorAll<HTMLElement>('.live-detector')
+    .forEach(mountLiveDetector);
+</script>
+
+<style>
+  .panes {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
+  canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .panes canvas {
+    aspect-ratio: 4 / 3;
+  }
+
+  .heat {
+    image-rendering: pixelated;
+  }
+
+  .controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    margin-top: 6px;
+  }
+
+  .status {
+    margin: 0;
+    font-size: 12.5px;
+    color: var(--note);
+  }
+
+  button {
+    font: inherit;
+    font-size: 12.5px;
+    padding: 0;
+    color: inherit;
+    background: none;
+    border: 0;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+</style>
