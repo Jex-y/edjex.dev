@@ -1,9 +1,12 @@
 /// <reference types="@webgpu/types" />
 import { LAYERS, type Parameters } from './network';
 
-export type Runner = (
-  input: Float32Array<ArrayBuffer>,
-) => Promise<Float32Array>;
+export type Runner = {
+  readonly run: (input: Float32Array<ArrayBuffer>) => Promise<Float32Array>;
+  readonly trace: (
+    input: Float32Array<ArrayBuffer>,
+  ) => Promise<readonly Float32Array[]>;
+};
 
 const WORKGROUP = 64;
 
@@ -91,15 +94,17 @@ export const createGpuRunner = async (
       storage(
         device,
         layer.outChannels * layer.outSize * layer.outSize,
-        i === LAYERS.length - 1 ? GPUBufferUsage.COPY_SRC : 0,
+        GPUBufferUsage.COPY_SRC,
       ),
     ),
   ];
-  const output = activations[activations.length - 1];
-  const readback = device.createBuffer({
-    size: output.size,
-    usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
-  });
+  const outputs = activations.slice(1);
+  const readbacks = outputs.map((buffer) =>
+    device.createBuffer({
+      size: buffer.size,
+      usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
+    }),
+  );
 
   const passes = LAYERS.map((layer, i) => {
     const uniforms = device.createBuffer({
@@ -136,7 +141,10 @@ export const createGpuRunner = async (
     };
   });
 
-  return async (input) => {
+  const execute = async (
+    input: Float32Array<ArrayBuffer>,
+    layers: readonly number[],
+  ) => {
     device.queue.writeBuffer(activations[0], 0, input);
     const encoder = device.createCommandEncoder();
     passes.forEach(({ bindGroup, workgroups }) => {
@@ -146,11 +154,32 @@ export const createGpuRunner = async (
       pass.dispatchWorkgroups(workgroups);
       pass.end();
     });
-    encoder.copyBufferToBuffer(output, 0, readback, 0, output.size);
+    layers.forEach((i) =>
+      encoder.copyBufferToBuffer(
+        outputs[i],
+        0,
+        readbacks[i],
+        0,
+        outputs[i].size,
+      ),
+    );
     device.queue.submit([encoder.finish()]);
-    await readback.mapAsync(GPUMapMode.READ);
-    const result = new Float32Array(readback.getMappedRange().slice(0));
-    readback.unmap();
-    return result;
+    return Promise.all(
+      layers.map(async (i) => {
+        await readbacks[i].mapAsync(GPUMapMode.READ);
+        const result = new Float32Array(readbacks[i].getMappedRange().slice(0));
+        readbacks[i].unmap();
+        return result;
+      }),
+    );
+  };
+
+  return {
+    run: async (input) => (await execute(input, [LAYERS.length - 1]))[0],
+    trace: (input) =>
+      execute(
+        input,
+        LAYERS.map((_, i) => i),
+      ),
   };
 };

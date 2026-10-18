@@ -36,11 +36,17 @@ const conv = (
   return output;
 };
 
-export const runOnCpu = (
+export const traceOnCpu = (
   parameters: Parameters,
   input: Float32Array,
-): Float32Array =>
-  LAYERS.reduce(
-    (activations, layer) => conv(layer, parameters, activations),
-    input,
+): readonly Float32Array[] =>
+  LAYERS.reduce<Float32Array[]>(
+    (outputs, layer) => [
+      ...outputs,
+      conv(layer, parameters, outputs.at(-1) ?? input),
+    ],
+    [],
   );
+
+export const runOnCpu = (parameters: Parameters, input: Float32Array) =>
+  traceOnCpu(parameters, input)[LAYERS.length - 1];
