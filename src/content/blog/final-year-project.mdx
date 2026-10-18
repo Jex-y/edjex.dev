@@ -15,6 +15,7 @@ import NoteRef from '../../components/NoteRef.astro';
 import WideFigure from '../../components/WideFigure.astro';
 import BoxesVsPoints from '../../components/figures/BoxesVsPoints.astro';
 import EnergyAxis from '../../components/figures/EnergyAxis.astro';
+import LiveDetector from '../../components/figures/LiveDetector.astro';
 import NetGlyph from '../../components/figures/NetGlyph.astro';
 import daphnia from './final-year-project-assets/dapnia.png';
 import bench from './final-year-project-assets/experiment-setup.jpg';
@@ -25,7 +26,7 @@ import bench from './final-year-project-assets/experiment-setup.jpg';
 
 Project Robocoenosis builds underwater devices that use living organisms as sensors. They run on microbial fuel cells, so every millijoule decides how often they can look.
 
-Water fleas spin when something in the water stresses them, which makes them a cheap detector for pollutants nobody thought to test for.<NoteRef n={1} /> Watching them needs computer vision on the device itself, because radio does not get out of the water and storing video is not real time.
+Water fleas spin when something in the water stresses them, which makes them a cheap detector for pollutants nobody thought to test for.<NoteRef n={1} /> Watching them needs computer vision on the device itself, because radio does not get out of the water and storing video is not real time. The model I ended up with is small enough that [it runs on this page](#run-it-here), on your own GPU.
 
 <Note slot="left" n={1}>*Daphnia*, a few millimetres long. Healthy ones swim in short hops; stressed ones go round in circles.</Note>
 
@@ -103,5 +104,25 @@ A few things surprised me. Every model on the Pareto front has five layers or fe
 <EnergyAxis slot="right">Energy per frame in µJ, log scale.</EnergyAxis>
 
 <Note slot="right" n={6}>Latency and energy correlate at r² = 0.9966 on the Hailo-8L.</Note>
+
+</Row>
+
+## Run it here
+
+<Row>
+
+A model this small doesn't need an accelerator to be fast. Below, KEYNAS5-204 runs in your browser on frames from the held-out test set, which it never saw in training. Every square, dot and heatmap is computed live, on your machine, as the page shows it.
+
+<LiveDetector>Left, each water flea the model finds: the square is the heatmap cell that fired, and the dot is where the offset moves it. Right, the heatmap itself, at half the resolution the model sees.</LiveDetector>
+
+The whole network is 12,387 numbers, about 50 KB, smaller than most of the photos on this page.<NoteRef n={7} /> There is no inference library. Each layer is one WebGPU compute shader: a 3×3 convolution in which every GPU thread works out a single output value. The three layers run back to back, and the result comes back to the page as three 96×96 grids: the heatmap and the two offsets.
+
+Decoding is the same as on the device. A sigmoid turns the first grid into scores, a 3×3 max filter keeps only the local peaks, anything under 0.5 is dropped, and each survivor moves by its offset from the centre of its cell to the animal.
+
+A frame is about 114 million multiply-adds, which a laptop GPU gets through in a few milliseconds. Without WebGPU, the same arithmetic runs as plain JavaScript in around a hundred.<NoteRef n={8} />
+
+<Note slot="right" n={7}>Exported from the same trained run that was compiled for the Hailo-8L.</Note>
+
+<Note slot="right" n={8}>The shader and the decoding are in [`src/scripts/detector`](https://github.com/Jex-y/edjex.dev/tree/main/src/scripts/detector) in this site's repository.</Note>
 
 </Row>
