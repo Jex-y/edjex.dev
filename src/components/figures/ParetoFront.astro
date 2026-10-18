@@ -1,0 +1,125 @@
+---
+type Point = { energy: number; ap: number };
+
+const FRONT: Point[] = [
+  { energy: 0.4, ap: 0.1237 },
+  { energy: 0.4, ap: 0.2028 },
+  { energy: 0.5, ap: 0.2465 },
+  { energy: 0.5, ap: 0.3981 },
+  { energy: 0.5, ap: 0.4659 },
+  { energy: 0.5, ap: 0.4797 },
+  { energy: 0.6, ap: 0.5232 },
+  { energy: 0.6, ap: 0.661 },
+  { energy: 0.7, ap: 0.6691 },
+  { energy: 1.1, ap: 0.8247 },
+  { energy: 1.3, ap: 0.8648 },
+  { energy: 1.3, ap: 0.8799 },
+  { energy: 1.9, ap: 0.8874 },
+  { energy: 2.2, ap: 0.9479 },
+  { energy: 3.9, ap: 0.9523 },
+  { energy: 5.9, ap: 0.9578 },
+  { energy: 11, ap: 0.9625 },
+  { energy: 16.2, ap: 0.9679 },
+  { energy: 19.9, ap: 0.975 },
+  { energy: 23.7, ap: 0.9921 },
+  { energy: 139.5, ap: 0.9937 },
+  { energy: 401.4, ap: 0.9954 },
+];
+const CHOSEN: Point = { energy: 2.2, ap: 0.9479 };
+
+const x = (energy: number) => 30 + ((Math.log10(energy) + 1) / 4) * 228;
+const y = (ap: number) => 128 - ap * 112;
+
+const STEPS = FRONT.map((p, i) =>
+  i === 0 ? `M ${x(p.energy)} ${y(p.ap)}` : `H ${x(p.energy)} V ${y(p.ap)}`,
+).join(' ');
+
+const DECADES = [0.1, 1, 10, 100, 1000];
+const decadeLabel = (value: number) =>
+  value >= 1000 ? `${value / 1000}k` : String(value);
+---
+
+<figure>
+  <svg
+    viewBox="0 0 270 160"
+    width="100%"
+    role="img"
+    aria-label="The Pareto front of average precision against energy per frame: precision climbs steeply up to about 2 microjoules and then flattens; the chosen three-layer model sits at 2.2 microjoules and 0.948"
+  >
+    <line x1="30" y1="128" x2="260" y2="128" stroke="#000000" stroke-width="0.8"
+    ></line>
+    <line x1="30" y1="12" x2="30" y2="128" stroke="#000000" stroke-width="0.8"
+    ></line>
+    {
+      DECADES.map((decade) => (
+        <>
+          <line
+            x1={x(decade)}
+            y1="128"
+            x2={x(decade)}
+            y2="132"
+            stroke="#000000"
+            stroke-width="0.8"
+          />
+          <text
+            x={x(decade)}
+            y="143"
+            text-anchor="middle"
+            font-size="10"
+            fill="#5f5f5f"
+          >
+            {decadeLabel(decade)}
+          </text>
+        </>
+      ))
+    }
+    {
+      [0, 0.5, 1].map((ap) => (
+        <>
+          <line
+            x1="26"
+            y1={y(ap)}
+            x2="30"
+            y2={y(ap)}
+            stroke="#000000"
+            stroke-width="0.8"
+          />
+          <text
+            x="23"
+            y={y(ap) + 3.5}
+            text-anchor="end"
+            font-size="10"
+            fill="#5f5f5f"
+          >
+            {ap}
+          </text>
+        </>
+      ))
+    }
+    <text x="260" y="157" text-anchor="end" font-size="10" fill="#5f5f5f"
+      >µJ per frame →</text
+    >
+    <text x="36" y="10" font-size="10" fill="#5f5f5f">average precision</text>
+
+    <path d={STEPS} fill="none" stroke="#000000" stroke-width="1"></path>
+    {
+      FRONT.map((p) => (
+        <circle cx={x(p.energy)} cy={y(p.ap)} r="1.9" fill="#000000" />
+      ))
+    }
+    <circle
+      cx={x(CHOSEN.energy)}
+      cy={y(CHOSEN.ap)}
+      r="5"
+      fill="none"
+      stroke="#000000"
+      stroke-width="0.9"></circle>
+    <text
+      x={x(CHOSEN.energy) + 6}
+      y={y(CHOSEN.ap) + 18}
+      font-size="10"
+      fill="#000000">three layers: 2.2 µJ, 0.948</text
+    >
+  </svg>
+  <figcaption><slot /></figcaption>
+</figure>

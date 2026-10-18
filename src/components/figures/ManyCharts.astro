@@ -1,0 +1,61 @@
+---
+type Status = 'done' | 'running' | 'queued';
+
+const STATUSES: Status[] = ['done', 'done', 'running', 'queued', 'queued'];
+const FILL: Record<Status, string> = {
+  done: '#000000',
+  running: '#a7a7a7',
+  queued: '#ffffff',
+};
+
+const PER_ROW = 9;
+const CHARTS = Array.from({ length: PER_ROW * 4 }, (_, i) => ({
+  x: (i % PER_ROW) * 29 + 1,
+  y: Math.floor(i / PER_ROW) * 22 + 1,
+  opacity: 1 - Math.floor(i / PER_ROW) * 0.22,
+  cells: Array.from(
+    { length: 6 },
+    (_, j) => STATUSES[((i + 3) * (j + 2) * 7 + i * j) % STATUSES.length],
+  ),
+}));
+---
+
+<figure>
+  <svg
+    viewBox="0 0 262 88"
+    width="100%"
+    role="img"
+    aria-label="Rows of small charts, each with its own agents part-way through, fading into the distance"
+  >
+    {
+      CHARTS.map(({ x, y, opacity, cells }) => (
+        <g opacity={opacity}>
+          <rect
+            x={x}
+            y={y}
+            width="22"
+            height="16"
+            fill="#ffffff"
+            stroke="#000000"
+            stroke-width="0.6"
+          />
+          {cells.map((status, k) => (
+            <rect
+              x={x + 3 + (k % 3) * 5.8}
+              y={y + 3 + Math.floor(k / 3) * 5.6}
+              width="4.4"
+              height="4.2"
+              fill={FILL[status]}
+              stroke={status === 'queued' ? '#a7a7a7' : 'none'}
+              stroke-width="0.5"
+            />
+          ))}
+        </g>
+      ))
+    }
+  </svg>
+  <figcaption>
+    Every customer's charts, each with its own agents, all on the same
+    containers. Schematic.
+  </figcaption>
+</figure>

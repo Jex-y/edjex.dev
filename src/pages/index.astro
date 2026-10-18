@@ -6,8 +6,10 @@ import Row from '../components/Row.astro';
 import Note from '../components/Note.astro';
 import NoteRef from '../components/NoteRef.astro';
 import PostList from '../components/PostList.astro';
-import AgentStep from '../components/figures/AgentStep.astro';
+import ChartAgents from '../components/figures/ChartAgents.astro';
 import EnergyAxis from '../components/figures/EnergyAxis.astro';
+import ManyCharts from '../components/figures/ManyCharts.astro';
+import ParetoFront from '../components/figures/ParetoFront.astro';
 import LifeGraph from '../components/figures/LifeGraph.astro';
 import NetGlyph from '../components/figures/NetGlyph.astro';
 import RiverGauge from '../components/figures/RiverGauge.astro';
@@ -40,20 +42,21 @@ const cisco = sitePath('/blog/cisco-internship/');
         I studied computer science at Durham and finished top of my year.<NoteRef
           n={2}
         /> I also learned to row there, and spent a year running Trevelyan College
-        Boat Club. Needing to know whether the river was safe to go out on turned
-        into a forecast of the River Wear.<NoteRef n={3} />
+        Boat Club. Not wanting to wake up for an outing just to be canceled, I built
+        a model that forecasts conditions on the Wear.<NoteRef n={3} />
       </p>
       <p>
-        For my master's thesis I searched five hundred neural networks for one
-        that could find water fleas on almost no power. The best of them had
-        three layers.<NoteRef n={4} />
+        For my master's project I searched for tiny vision models that watch
+        water fleas for signs of stress, an early warning of water pollution.<NoteRef
+          n={4}
+        />
       </p>
 
       <Fragment slot="left">
         <figure class="portrait">
           <Image
             src={Portrait}
-            alt="Ed Jex at his graduation in Durham"
+            alt="Ed Jex at graduation in Durham, July 2025"
             width={360}
             height={450}
             fit="cover"
@@ -61,8 +64,8 @@ const cisco = sitePath('/blog/cisco-internship/');
           <figcaption>Durham, 2025.</figcaption>
         </figure>
         <Note n={1}>
-          Mostly agentic claim charting, and the systems that keep thousands of
-          agents running at once. More under Work.
+          Mostly our charts product, and the infrastructure that keeps agents
+          running in the background at scale. More under Work.
           <svg
             slot="figure"
             viewBox="0 0 72 30"
@@ -85,9 +88,7 @@ const cisco = sitePath('/blog/cisco-internship/');
           </svg>
         </Note>
         <Note n={3}>
-          The clubs check it before they boat: <a href={RIVER_URL}
-            >river.edjex.dev</a
-          >
+          <a href={RIVER_URL}>river.edjex.dev</a>
         </Note>
       </Fragment>
 
@@ -118,43 +119,70 @@ const cisco = sitePath('/blog/cisco-internship/');
 
     <Row>
       <p>
-        At Solve I've mostly worked on agents. I took agentic claim charting
-        from a first prototype to something attorneys use,<NoteRef n={5} /> and built
-        a good part of the system underneath it.
+        I joined Solve straight out of uni. Most of my work is on Charts:
+        spreadsheets for IP search and analysis, each filled in by an agent that
+        plans the work and delegates sections of it to subagents.<NoteRef
+          n={5}
+        />
+        Work that used to go out to a search specialist, or take tens of hours of
+        an attorney's time, comes back in minutes. I took it from a prototype to
+        a production system that thousands of customers use every day, and they now
+        use it for all sorts of tables it was never designed for.
+      </p>
+      <ChartAgents />
+      <p>
+        I also built the infrastructure that runs thousands of agent traces a
+        day, which now underpins most of the platform. Customers can leave
+        agents working in the background, close the tab, and come back to them
+        still streaming live.
       </p>
       <Note slot="left" n={5}>
-        A claim chart maps each element of a patent claim to evidence in prior
-        art or a product. In production since [MONTH YEAR].
+        Invalidity, freedom to operate, infringement, standard-essential patents
+        and portfolio reviews. The rows and columns are whatever the analysis
+        needs, such as claim elements against prior art or patents against
+        products, and every cell is cited. In production since January 2026.
       </Note>
     </Row>
 
     <Row>
       <p>
-        Three problems took most of the time. Making each step of the tool loop
-        fast, by running independent calls at once and cutting the dead time
-        between model turns.<NoteRef n={6} /> Streaming everything an agent does
-        to the browser as it happens, so nobody sits watching a spinner. And hosting:
-        scaling our agent runtime to thousands of agent clusters working at once,
-        over long trajectories.<NoteRef n={7} />
+        Three problems took most of the time. The first was streaming. Agent
+        messages and chart edits both have to reach the browser instantly,
+        exactly once, and survive a bad connection. Every change is an event:
+        the ones worth keeping are written to Postgres, the rest are applied and
+        passed on,<NoteRef n={6} /> and all of them travel over Redis to the API,
+        then to the browser over server-sent events, or long polling when the network
+        is poor. A client that drops reconnects from a cursor into what's already
+        persisted, so it catches up with no gaps and no duplicates.
       </p>
-      <Note slot="left" n={7}>
-        A cluster is a group of agents sharing one task. Trajectories run to [N]
-        steps.
+      <p>
+        The second was time to first token. We grew from working on one document
+        at a time to large projects, and were loading and parsing documents,
+        sometimes more than once, for agents that never read them. Now they load
+        lazily, and OCR splits each document into page ranges that run in
+        parallel and are stitched back together.
+      </p>
+      <p>
+        The third was scale. Agent volume has grown exponentially, and traces
+        have gone from short, bounded tasks to long, open-ended ones. Fitting
+        many agents on one container meant hunting down work that held the GIL
+        and stalled every other agent beside it.
+      </p>
+      <Note slot="left" n={6}>
+        An agent's messages are kept. A change to a document's state is applied
+        on the backend, and the browser only needs to show the result.
       </Note>
-      <Fragment slot="right">
-        <Note n={6}>About [X]× faster per step.</Note>
-        <AgentStep />
-      </Fragment>
+      <ManyCharts slot="right" />
     </Row>
 
     <Row>
       <p>
         Before Solve I spent a summer at Cisco, working on the Webex web client.<NoteRef
-          n={8}
+          n={7}
         />
       </p>
-      <Note slot="right" n={8}>
-        Twelve weeks, summer 2022. <a href={cisco}>I wrote about it</a>.
+      <Note slot="right" n={7}>
+        Twelve weeks, summer 2022. <a href={cisco}>This is what I worked on</a>.
       </Note>
     </Row>
 
@@ -162,31 +190,42 @@ const cisco = sitePath('/blog/cisco-internship/');
 
     <Row>
       <p>
-        My thesis asked how little energy a useful vision model can spend. The
-        task was watching water fleas, which spin when the water around them is
-        polluted, on a device powered by a microbial fuel cell. Treating
-        detection as finding points rather than drawing boxes, then searching
-        five hundred architectures and measuring each one on the hardware, gave
-        a three-layer network that uses 2.2 µJ a frame: 680 times less than
-        YOLO11-nano.<NoteRef n={9} />
+        My thesis asked how little energy a useful vision model can spend, and
+        what it has to give up to get there. The task was watching water fleas,
+        which spin when the water around them is polluted, on a device powered
+        by a microbial fuel cell. Treating detection as finding points rather
+        than drawing boxes, then searching five hundred architectures and
+        measuring each one on the hardware, gave a three-layer network that uses
+        2.2 µJ a frame: 680 times less than YOLO11-nano.<NoteRef n={8} />
       </p>
-      <Note slot="left" n={9}>
+      <p>
+        The same approach works well beyond water fleas: anywhere you don't need
+        the general reasoning of a large model, but do need low latency, low
+        cost or high throughput.
+      </p>
+      <Note slot="left" n={8}>
         Supervised by Dr Farshad Arvin. <a href={thesis}>The full write-up</a>.
       </Note>
-      <EnergyAxis slot="right">
-        Energy per frame in µJ, measured on the device. Log scale.
-      </EnergyAxis>
+      <Fragment slot="right">
+        <EnergyAxis>
+          Energy per frame in µJ, measured on the device. Log scale.
+        </EnergyAxis>
+        <ParetoFront>
+          The 22 models on the Pareto front, out of five hundred measured on the
+          device.
+        </ParetoFront>
+      </Fragment>
     </Row>
 
     <Row>
       <p>
         On the side I rewrote TD-MPC2, a model-based reinforcement learning
         method, in JAX. Compiling the planning and update steps makes it train
-        five to ten times faster than the original.<NoteRef n={10} /> For two years
+        five to ten times faster than the original.<NoteRef n={9} /> For two years
         I also ran undergraduate labs, in Computational Thinking and in Networks
         and Systems.
       </p>
-      <Note slot="right" n={10}>
+      <Note slot="right" n={9}>
         JAX, Flax and MuJoCo. <a href={TDMPC2_URL}
           >github.com/Jex-y/tdmpc2-jax</a
         >
@@ -201,9 +240,9 @@ const cisco = sitePath('/blog/cisco-internship/');
         College Boat Club: a year of training plans, races, budgets and boats.
         Whether we could go out at all depended on the Wear, so in 2024 I built
         a deep-learning forecast of the river level and a dashboard the clubs
-        check before they boat.<NoteRef n={11} />
+        check before they boat.<NoteRef n={10} />
       </p>
-      <Note slot="left" n={11}>
+      <Note slot="left" n={10}>
         PyTorch for the model, Rust and ONNX to serve it. <a href={RIVER_URL}
           >river.edjex.dev</a
         >
@@ -219,9 +258,8 @@ const cisco = sitePath('/blog/cisco-internship/');
 
     <Row>
       <p class="elsewhere">
-        Write to <a href={`mailto:${EMAIL}`}>{EMAIL}</a>. Code is on <a
-          href={GITHUB_URL}>GitHub</a
-        >, the rest is on <a href={LINKEDIN_URL}>LinkedIn</a>, and there's a <a
+        Write to {EMAIL}. Code is on <a href={GITHUB_URL}>GitHub</a>, the rest
+        is on <a href={LINKEDIN_URL}>LinkedIn</a>, and there's a <a
           href={sitePath('/cv.pdf')}>CV</a
         > if you want one.
       </p>
