@@ -1,4 +1,6 @@
 ---
+import { appear, keyframes } from '../../lib/motion';
+
 type Point = { energy: number; ap: number };
 
 const FRONT: Point[] = [
@@ -30,16 +32,31 @@ const CHOSEN: Point = { energy: 2.2, ap: 0.9479 };
 const x = (energy: number) => 30 + ((Math.log10(energy) + 1) / 4) * 228;
 const y = (ap: number) => 128 - ap * 112;
 
-const STEPS = FRONT.map((p, i) =>
-  i === 0 ? `M ${x(p.energy)} ${y(p.ap)}` : `H ${x(p.energy)} V ${y(p.ap)}`,
-).join(' ');
+const STEPS = FRONT.slice(1).map(
+  (p, i) =>
+    `M ${x(FRONT[i].energy)} ${y(FRONT[i].ap)} H ${x(p.energy)} V ${y(p.ap)}`,
+);
 
 const DECADES = [0.1, 1, 10, 100, 1000];
+
+const pointStart = (k: number) => 6 + k * 2;
+const CHOSEN_START = pointStart(FRONT.length - 1) + 5;
+const MOTION_CSS = [
+  keyframes(
+    'pf-in',
+    [...FRONT.map((_, k) => pointStart(k)), CHOSEN_START, CHOSEN_START + 3],
+    appear,
+  ),
+].join('\n');
+const appearAt = (start: number) => ({
+  class: 'pf-in',
+  style: `animation-name: pf-in-${start}`,
+});
 const decadeLabel = (value: number) =>
   value >= 1000 ? `${value / 1000}k` : String(value);
 ---
 
-<figure>
+<figure class="motion pareto-front">
   <svg
     viewBox="0 0 270 160"
     width="100%"
@@ -101,13 +118,22 @@ const decadeLabel = (value: number) =>
     >
     <text x="36" y="10" font-size="10" fill="#5f5f5f">average precision</text>
 
-    <path d={STEPS} fill="none" stroke="#000000" stroke-width="1"></path>
+    <g fill="none" stroke="#000000" stroke-width="1">
+      {STEPS.map((d, k) => <path d={d} {...appearAt(pointStart(k + 1))} />)}
+    </g>
     {
-      FRONT.map((p) => (
-        <circle cx={x(p.energy)} cy={y(p.ap)} r="1.9" fill="#000000" />
+      FRONT.map((p, k) => (
+        <circle
+          cx={x(p.energy)}
+          cy={y(p.ap)}
+          r="1.9"
+          fill="#000000"
+          {...appearAt(pointStart(k))}
+        />
       ))
     }
     <circle
+      {...appearAt(CHOSEN_START)}
       cx={x(CHOSEN.energy)}
       cy={y(CHOSEN.ap)}
       r="5"
@@ -115,6 +141,7 @@ const decadeLabel = (value: number) =>
       stroke="#000000"
       stroke-width="0.9"></circle>
     <text
+      {...appearAt(CHOSEN_START + 3)}
       x={x(CHOSEN.energy) + 6}
       y={y(CHOSEN.ap) + 18}
       font-size="10"
@@ -123,3 +150,33 @@ const decadeLabel = (value: number) =>
   </svg>
   <figcaption><slot /></figcaption>
 </figure>
+
+<Fragment set:html={`<style>${MOTION_CSS}</style>`} />
+
+<script>
+  import { playWhenVisible } from '../../scripts/motion';
+
+  document.querySelectorAll('.pareto-front').forEach(playWhenVisible);
+</script>
+
+<style>
+  .pareto-front :global(*) {
+    animation-play-state: paused;
+  }
+
+  .pareto-front:global(.playing) :global(*) {
+    animation-play-state: running;
+  }
+
+  .pareto-front :global(.pf-in) {
+    animation-duration: 10s;
+    animation-iteration-count: infinite;
+    animation-timing-function: ease-out;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pareto-front :global(*) {
+      animation: none !important;
+    }
+  }
+</style>

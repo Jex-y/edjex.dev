@@ -1,4 +1,6 @@
 ---
+import { appear, grow, keyframes, travel } from '../../lib/motion';
+
 type Finding = 'present' | 'construction' | 'absent' | 'unclaimed';
 type Highlight = 'blue' | 'violet';
 type Segment = { w: number; hl?: Highlight };
@@ -105,6 +107,57 @@ const SUBAGENTS: { column: number; status: Status }[] = [
 ];
 const subagentX = (column: number) => COLUMNS[column].x + COLUMNS[column].w / 2;
 
+const INPUT_PATHS = [
+  'M 186 24 C 250 24, 270 58, 318 59',
+  'M 182 68 C 250 68, 280 61, 318 61',
+  'M 120 104 C 230 104, 270 64, 318 62',
+];
+const inputStart = (k: number) => 2 + k * 4;
+const AGENT_PULSE = 16;
+const delegateStart = (k: number) => 19 + k * 2;
+const subagentStart = (k: number) => 24 + k * 2;
+const cellStart = (column: number, row: number) =>
+  30 + (column - 1) * 9 + row * 3;
+
+const CELL_STARTS = ROWS.flatMap((_, i) =>
+  [1, 2, 3, 4].map((column) => cellStart(column, i)),
+);
+const MOTION_CSS = [
+  keyframes(
+    'ca-in',
+    [...CELL_STARTS, ...SUBAGENTS.map((_, k) => subagentStart(k))],
+    appear,
+  ),
+  keyframes(
+    'ca-grow',
+    CELL_STARTS.map((s) => s + 1),
+    grow,
+  ),
+  keyframes(
+    'ca-flow',
+    [
+      ...INPUT_PATHS.map((_, k) => inputStart(k)),
+      ...SUBAGENTS.map((_, k) => delegateStart(k)),
+    ],
+    travel,
+  ),
+  `@keyframes ca-pulse { 0%, ${AGENT_PULSE}% { opacity: 0; transform: scale(1) } ${AGENT_PULSE + 1}% { opacity: 0.5 } ${AGENT_PULSE + 6}%, 100% { opacity: 0; transform: scale(3) } }`,
+].join('\n');
+
+const appearAt = (start: number) => ({
+  class: 'ca-in',
+  style: `animation-name: ca-in-${start}`,
+});
+const growAt = (start: number) => ({
+  class: 'ca-grow',
+  style: `animation-name: ca-grow-${start + 1}`,
+});
+const flowAt = (start: number) => ({
+  class: 'ca-flow',
+  pathLength: 100,
+  style: `animation-name: ca-flow-${start}`,
+});
+
 const LEGEND: { finding: Finding; label: string; x: number }[] = [
   { finding: 'present', label: 'Present', x: 0 },
   { finding: 'construction', label: 'Depends on claim construction', x: 70 },
@@ -113,7 +166,7 @@ const LEGEND: { finding: Finding; label: string; x: number }[] = [
 ];
 ---
 
-<figure>
+<figure class="motion chart-agents">
   <svg
     viewBox={`0 0 ${WIDTH} ${CHART_BOTTOM + 28}`}
     width="100%"
@@ -170,13 +223,7 @@ const LEGEND: { finding: Finding; label: string; x: number }[] = [
     >
 
     <g stroke="#000000" stroke-width="0.9" fill="none">
-      <path d="M 186 24 C 250 24, 270 58, 318 59" marker-end="url(#chart-arrow)"
-      ></path>
-      <path d="M 182 68 C 250 68, 280 61, 318 61" marker-end="url(#chart-arrow)"
-      ></path>
-      <path
-        d="M 120 104 C 230 104, 270 64, 318 62"
-        marker-end="url(#chart-arrow)"></path>
+      {INPUT_PATHS.map((d) => <path d={d} marker-end="url(#chart-arrow)" />)}
       {
         SUBAGENTS.map(({ column }) => (
           <>
@@ -197,18 +244,46 @@ const LEGEND: { finding: Finding; label: string; x: number }[] = [
         ))
       }
     </g>
+    <g class="ca-motion-only" stroke="#e07a1f" stroke-width="2" fill="none">
+      {
+        INPUT_PATHS.map((d, k) => (
+          <path d={d} stroke-dasharray="12 200" {...flowAt(inputStart(k))} />
+        ))
+      }
+      {
+        SUBAGENTS.map(({ column }, k) => (
+          <line
+            x1={AGENT.x}
+            y1={AGENT.y}
+            x2={subagentX(column)}
+            y2={SUBAGENT_Y}
+            stroke-dasharray="12 200"
+            {...flowAt(delegateStart(k))}
+          />
+        ))
+      }
+    </g>
     {
-      SUBAGENTS.map(({ column, status }) => (
-        <circle
-          cx={subagentX(column)}
-          cy={SUBAGENT_Y}
-          r="4"
-          fill={status === 'done' ? '#000000' : '#a7a7a7'}
-          stroke="#000000"
-          stroke-width="0.9"
-        />
+      SUBAGENTS.map(({ column, status }, k) => (
+        <g {...appearAt(subagentStart(k))}>
+          <circle
+            class={status === 'running' ? 'ca-blink' : undefined}
+            cx={subagentX(column)}
+            cy={SUBAGENT_Y}
+            r="4"
+            fill={status === 'done' ? '#000000' : '#a7a7a7'}
+            stroke="#000000"
+            stroke-width="0.9"
+          />
+        </g>
       ))
     }
+    <circle
+      class="ca-pulse ca-motion-only"
+      cx={AGENT.x}
+      cy={AGENT.y}
+      r="7"
+      fill="#e07a1f"></circle>
     <circle cx={AGENT.x} cy={AGENT.y} r="7" fill="#000000"></circle>
     <text
       x={AGENT.x + 13}
@@ -317,7 +392,14 @@ const LEGEND: { finding: Finding; label: string; x: number }[] = [
                   fill={HIGHLIGHT[hl]}
                 />
               )}
-              <rect x={x + 9} y={y + 23} width="40" height="2" fill="#5f5f5f" />
+              <rect
+                x={x + 9}
+                y={y + 23}
+                width="40"
+                height="2"
+                fill="#5f5f5f"
+                {...growAt(cellStart(column, i))}
+              />
               <rect
                 x={x + 9}
                 y={y + 33}
@@ -325,6 +407,7 @@ const LEGEND: { finding: Finding; label: string; x: number }[] = [
                 height="2"
                 fill="#5f5f5f"
                 opacity="0.6"
+                {...growAt(cellStart(column, i) + 1)}
               />
             </>
           );
@@ -362,6 +445,7 @@ const LEGEND: { finding: Finding; label: string; x: number }[] = [
                       width={seg.w + 4}
                       height="8"
                       fill={HIGHLIGHT[seg.hl]}
+                      {...appearAt(cellStart(seg.hl === 'blue' ? 1 : 2, i))}
                     />
                   )}
                   <rect
@@ -378,126 +462,130 @@ const LEGEND: { finding: Finding; label: string; x: number }[] = [
             {cell(1, row.housing, 'blue')}
             {cell(2, row.marker, 'violet')}
 
-            {row.drawing === 'figure' ? (
-              <g transform={`translate(${drawings.x + 10} ${y + 6})`}>
+            <g {...appearAt(cellStart(3, i))}>
+              {row.drawing === 'figure' ? (
+                <g transform={`translate(${drawings.x + 10} ${y + 6})`}>
+                  <rect
+                    width="58"
+                    height="38"
+                    fill="#ffffff"
+                    stroke="#000000"
+                    stroke-width="0.6"
+                  />
+                  <path
+                    d="M 10 30 L 16 12 H 34 L 40 30 Z"
+                    fill="none"
+                    stroke="#000000"
+                    stroke-width="0.7"
+                  />
+                  <ellipse
+                    cx="25"
+                    cy="12"
+                    rx="9"
+                    ry="3"
+                    fill="none"
+                    stroke="#000000"
+                    stroke-width="0.7"
+                  />
+                  <rect
+                    x="20"
+                    y="21"
+                    width="10"
+                    height="5"
+                    fill={HIGHLIGHT.violet}
+                    stroke="#7a5fb0"
+                    stroke-width="0.6"
+                  />
+                  <line
+                    x1="40"
+                    y1="12"
+                    x2="50"
+                    y2="7"
+                    stroke="#000000"
+                    stroke-width="0.5"
+                  />
+                  <text x="50" y="6" font-size="6" fill="#000000">
+                    12
+                  </text>
+                  <line
+                    x1="30"
+                    y1="24"
+                    x2="50"
+                    y2="28"
+                    stroke="#000000"
+                    stroke-width="0.5"
+                  />
+                  <text x="50" y="34" font-size="6" fill="#000000">
+                    14
+                  </text>
+                  <text
+                    x="64"
+                    y="20"
+                    font-size="7"
+                    font-style="italic"
+                    fill="#5f5f5f"
+                  >
+                    Fig. {i + 2}
+                  </text>
+                </g>
+              ) : (
                 <rect
-                  width="58"
-                  height="38"
-                  fill="#ffffff"
-                  stroke="#000000"
-                  stroke-width="0.6"
+                  x={drawings.x + drawings.w / 2 - 6}
+                  y={y + ROW_H / 2}
+                  width="12"
+                  height="1.2"
+                  fill="#a7a7a7"
                 />
-                <path
-                  d="M 10 30 L 16 12 H 34 L 40 30 Z"
-                  fill="none"
-                  stroke="#000000"
-                  stroke-width="0.7"
-                />
-                <ellipse
-                  cx="25"
-                  cy="12"
-                  rx="9"
-                  ry="3"
-                  fill="none"
-                  stroke="#000000"
-                  stroke-width="0.7"
-                />
-                <rect
-                  x="20"
-                  y="21"
-                  width="10"
-                  height="5"
-                  fill={HIGHLIGHT.violet}
-                  stroke="#7a5fb0"
-                  stroke-width="0.6"
-                />
-                <line
-                  x1="40"
-                  y1="12"
-                  x2="50"
-                  y2="7"
-                  stroke="#000000"
-                  stroke-width="0.5"
-                />
-                <text x="50" y="6" font-size="6" fill="#000000">
-                  12
-                </text>
-                <line
-                  x1="30"
-                  y1="24"
-                  x2="50"
-                  y2="28"
-                  stroke="#000000"
-                  stroke-width="0.5"
-                />
-                <text x="50" y="34" font-size="6" fill="#000000">
-                  14
-                </text>
-                <text
-                  x="64"
-                  y="20"
-                  font-size="7"
-                  font-style="italic"
-                  fill="#5f5f5f"
-                >
-                  Fig. {i + 2}
-                </text>
-              </g>
-            ) : (
-              <rect
-                x={drawings.x + drawings.w / 2 - 6}
-                y={y + ROW_H / 2}
-                width="12"
-                height="1.2"
-                fill="#a7a7a7"
-              />
-            )}
+              )}
+            </g>
 
-            {row.risk === 'running' ? (
-              <>
-                <rect
-                  x={risk.x + 3}
-                  y={y + 3}
-                  width={risk.w - 6}
-                  height="20"
-                  fill="#e6e6e6"
-                />
-                <rect
-                  x={risk.x + 7}
-                  y={y + 29}
-                  width="50"
-                  height="2"
-                  fill="#e6e6e6"
-                />
-              </>
-            ) : (
-              <>
-                <rect
-                  x={risk.x + 3}
-                  y={y + 3}
-                  width={risk.w - 6}
-                  height={ROW_H - 6}
-                  fill={RISK[row.risk].fill}
-                />
-                <text
-                  x={risk.x + 9}
-                  y={y + 21}
-                  font-size="11"
-                  font-weight="600"
-                  fill={RISK[row.risk].ink}
-                >
-                  {RISK[row.risk].label}
-                </text>
-                <rect
-                  x={risk.x + 9}
-                  y={y + 30}
-                  width="44"
-                  height="1.8"
-                  fill={RISK[row.risk].ink}
-                  opacity="0.7"
-                />
-              </>
-            )}
+            <g {...appearAt(cellStart(4, i))}>
+              {row.risk === 'running' ? (
+                <g class="ca-blink">
+                  <rect
+                    x={risk.x + 3}
+                    y={y + 3}
+                    width={risk.w - 6}
+                    height="20"
+                    fill="#e6e6e6"
+                  />
+                  <rect
+                    x={risk.x + 7}
+                    y={y + 29}
+                    width="50"
+                    height="2"
+                    fill="#e6e6e6"
+                  />
+                </g>
+              ) : (
+                <>
+                  <rect
+                    x={risk.x + 3}
+                    y={y + 3}
+                    width={risk.w - 6}
+                    height={ROW_H - 6}
+                    fill={RISK[row.risk].fill}
+                  />
+                  <text
+                    x={risk.x + 9}
+                    y={y + 21}
+                    font-size="11"
+                    font-weight="600"
+                    fill={RISK[row.risk].ink}
+                  >
+                    {RISK[row.risk].label}
+                  </text>
+                  <rect
+                    x={risk.x + 9}
+                    y={y + 30}
+                    width="44"
+                    height="1.8"
+                    fill={RISK[row.risk].ink}
+                    opacity="0.7"
+                  />
+                </>
+              )}
+            </g>
           </>
         );
       })
@@ -527,3 +615,66 @@ const LEGEND: { finding: Finding; label: string; x: number }[] = [
     highlighted in the same colour as its evidence, figures included. Schematic.
   </figcaption>
 </figure>
+
+<Fragment set:html={`<style>${MOTION_CSS}</style>`} />
+
+<script>
+  import { playWhenVisible } from '../../scripts/motion';
+
+  document.querySelectorAll('.chart-agents').forEach(playWhenVisible);
+</script>
+
+<style>
+  .chart-agents :global(*) {
+    animation-play-state: paused;
+  }
+
+  .chart-agents:global(.playing) :global(*) {
+    animation-play-state: running;
+  }
+
+  .chart-agents :global(.ca-in),
+  .chart-agents :global(.ca-grow),
+  .chart-agents :global(.ca-flow) {
+    animation-duration: 10s;
+    animation-iteration-count: infinite;
+    animation-timing-function: ease-out;
+  }
+
+  .chart-agents :global(.ca-grow) {
+    transform-box: fill-box;
+    transform-origin: 0 50%;
+  }
+
+  .chart-agents :global(.ca-flow) {
+    stroke-dashoffset: 12;
+    animation-timing-function: ease-in-out;
+  }
+
+  .chart-agents :global(.ca-pulse) {
+    opacity: 0;
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: ca-pulse 10s ease-out infinite;
+  }
+
+  .chart-agents :global(.ca-blink) {
+    animation: ca-blink 1.4s ease-in-out infinite;
+  }
+
+  @keyframes ca-blink {
+    50% {
+      opacity: 0.35;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .chart-agents :global(*) {
+      animation: none !important;
+    }
+
+    .chart-agents :global(.ca-motion-only) {
+      display: none;
+    }
+  }
+</style>
