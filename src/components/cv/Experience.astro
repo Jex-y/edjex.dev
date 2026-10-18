@@ -5,14 +5,43 @@ type Props = {
   subtitle?: string;
 };
 
-const { title, date, subtitle } = Astro.props as Props;
+const { title, date, subtitle } = Astro.props;
 ---
 
-<div class="my-2">
-  <div class="flex items-center justify-between gap-2">
-    <h3 class="font-bold">{title}</h3>
-    {date && <span>{date}</span>}
+<div class="entry">
+  <div class="head">
+    <h3>{title}</h3>
+    {date && <span class="date">{date}</span>}
   </div>
-  {subtitle && <p class="text-gray-600">{subtitle}</p>}
+  {subtitle && <p class="subtitle">{subtitle}</p>}
   <slot />
 </div>
+
+<style>
+  .head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 3mm;
+  }
+
+  h3 {
+    margin: 0;
+    font-weight: 600;
+    font-size: 1.1em;
+    line-height: 1.3;
+  }
+
+  .date {
+    flex: none;
+    font-size: 0.94em;
+    font-variant-numeric: tabular-nums;
+    color: var(--note);
+  }
+
+  .subtitle {
+    margin-bottom: 0.6mm;
+    font-style: italic;
+    color: var(--note);
+  }
+</style>

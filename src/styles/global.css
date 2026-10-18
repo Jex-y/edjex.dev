@@ -1,7 +1,6 @@
 @import 'tailwindcss';
 
 @theme {
-  --font-montserrat: 'Montserrat', sans-serif;
   --font-serif: 'Literata Variable', Georgia, serif;
 }
 

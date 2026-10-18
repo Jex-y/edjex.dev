@@ -1,10 +1,27 @@
 ---
 type Props = { title: string };
-const { title } = Astro.props as Props;
+const { title } = Astro.props;
 ---
 
 <section>
-  <h2 class="text-xl font-semibold font-montserrat">{title}</h2>
-  <hr class="my-0.5 h-0.5 mx-auto bg-gray-200 border-0 rounded-sm" />
+  <h2>{title}</h2>
   <slot />
 </section>
+
+<style>
+  section {
+    display: flex;
+    flex-direction: column;
+    gap: 2mm;
+  }
+
+  h2 {
+    margin: 0;
+    padding-bottom: 1mm;
+    border-bottom: 0.75pt solid var(--ink);
+    font-weight: 400;
+    font-style: italic;
+    font-size: 1.48em;
+    line-height: 1.2;
+  }
+</style>
