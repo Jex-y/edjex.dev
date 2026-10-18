@@ -16,7 +16,7 @@ import WideFigure from '../../components/WideFigure.astro';
 import BoxesVsPoints from '../../components/figures/BoxesVsPoints.astro';
 import EnergyAxis from '../../components/figures/EnergyAxis.astro';
 import FrameToPoints from '../../components/figures/FrameToPoints.astro';
-import LiveDetector from '../../components/figures/LiveDetector.astro';
+import LiveDetectorLab from '../../components/figures/LiveDetectorLab.astro';
 import NetGlyph from '../../components/figures/NetGlyph.astro';
 import daphnia from './final-year-project-assets/dapnia.png';
 import bench from './final-year-project-assets/experiment-setup.jpg';
@@ -114,18 +114,26 @@ A few things surprised me. Every model on the Pareto front has five layers or fe
 
 <Row>
 
-A model this small doesn't need an accelerator to be fast. Below, KEYNAS5-204 runs in your browser on frames from the held-out test set, which it never saw in training. Every square, dot and heatmap is computed live, on your machine, as the page shows it.
+A model this small doesn't need an accelerator to be fast. Below, KEYNAS5-204 runs in your browser on frames from the held-out test set, which it never saw in training, or on any image you give it. Everything is computed live, on your machine.
 
-<LiveDetector>Left, each water flea the model finds: the square is the heatmap cell that fired, and the dot is where the offset moves it. Right, the heatmap itself, at half the resolution the model sees.</LiveDetector>
+Pick a stage on the line under the image to see what the network holds at that point: the input as the network sees it, any of the 72 feature maps, the three raw outputs of the head, or the decoded points. Hover the image to read the values under the cursor.
 
-The whole network is 12,387 numbers, about 50 KB, smaller than most of the photos on this page.<NoteRef n={7} /> There is no inference library. Each layer is one WebGPU compute shader: a 3×3 convolution in which every GPU thread works out a single output value. The three layers run back to back, and the result comes back to the page as three 96×96 grids: the heatmap and the two offsets.
+</Row>
 
-Decoding is the same as on the device. A sigmoid turns the first grid into scores, a 3×3 max filter keeps only the local peaks, anything under 0.5 is dropped, and each survivor moves by its offset from the centre of its cell to the animal.
+<LiveDetectorLab>KEYNAS5-204 running live. The threshold, the overlays and the backend all apply as you change them; timings are the median of repeated runs on this frame.</LiveDetectorLab>
 
-A frame is about 114 million multiply-adds, which a laptop GPU gets through in a few milliseconds. Without WebGPU, the same arithmetic runs as plain JavaScript in around a hundred.<NoteRef n={8} />
+<Row>
+
+The whole network is 12,387 numbers, about 50 KB, smaller than most of the photos on this page.<NoteRef n={7} /> There is no inference library. Each layer is one dispatch of a WGSL compute shader, with one GPU thread per output value, each summing a 3×3 window across every input channel. Batch norm was folded into the convolution weights at export, so a layer is just a convolution, a bias and, for the first two, a ReLU. The three dispatches go into a single command buffer, and the 96×96×3 output is copied back to the page.
+
+Nearly all the arithmetic is in the second layer: 95.6 of the 113.5 million multiply-adds a frame, because it maps 48 channels to 24 at the full output resolution. The first layer works at a stride of 2, the only downsampling in the network, and the head is cheap because it has just three outputs.
+
+Decoding is the same as on the device. A sigmoid turns the heatmap into scores, a 3×3 max filter keeps only the local peaks, anything under the threshold is dropped, and each survivor moves by its offset from the corner of its cell to the animal. The histogram shows why the threshold barely matters on most of these frames: a peak is either a flea, close to 1, or texture on the dish and the label, well under 0.5.
+
+On a laptop GPU a frame takes a few milliseconds, including the round trip to the GPU and back. As plain JavaScript on the CPU it takes a hundred or two. On the Hailo-8L it took 0.19.<NoteRef n={8} />
 
 <Note slot="right" n={7}>Exported from the same trained run that was compiled for the Hailo-8L.</Note>
 
-<Note slot="right" n={8}>The shader and the decoding are in [`src/scripts/detector`](https://github.com/Jex-y/edjex.dev/tree/main/src/scripts/detector) in this site's repository.</Note>
+<Note slot="right" n={8}>The shader, the decoding and this page's controls are in [`src/scripts/detector`](https://github.com/Jex-y/edjex.dev/tree/main/src/scripts/detector) in this site's repository.</Note>
 
 </Row>

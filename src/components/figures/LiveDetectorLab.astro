@@ -1,0 +1,570 @@
+---
+import weights from '../../assets/detector/keynas5-204.bin?url';
+
+const frames = Object.values(
+  import.meta.glob<string>('../../assets/detector/frames/*.jpg', {
+    eager: true,
+    query: '?url',
+    import: 'default',
+  }),
+);
+
+const STAGES = [
+  { stage: 'input', name: 'input', dims: '192 × 192 × 3' },
+  { stage: 'conv1', name: 'conv 3×3, /2', dims: '96 × 96 × 48' },
+  { stage: 'conv2', name: 'conv 3×3', dims: '96 × 96 × 24' },
+  { stage: 'head', name: 'head', dims: '96 × 96 × 3' },
+  { stage: 'decode', name: 'decode', dims: '' },
+];
+
+const TOGGLES = [
+  { toggle: 'cells', label: 'cells that fired', checked: true },
+  { toggle: 'offsets', label: 'offset points', checked: true },
+  { toggle: 'below', label: 'peaks under the threshold', checked: true },
+  { toggle: 'heatmap', label: 'heatmap underneath', checked: false },
+];
+---
+
+<figure class="full lab" data-weights={weights}>
+  <div class="lab-grid">
+    <div class="lab-main">
+      <div class="lab-view">
+        <canvas data-lab="view" width="640" height="480"></canvas>
+        <p class="lab-tip" data-lab="tip" aria-live="polite">
+          Loading the model…
+        </p>
+      </div>
+      <div class="lab-rail" data-lab="rail" role="group" aria-label="Stage">
+        {
+          STAGES.map(({ stage, name, dims }, k) => (
+            <button
+              type="button"
+              style={`--k: ${k}`}
+              data-stage={stage}
+              aria-pressed={stage === 'decode' ? 'true' : 'false'}
+            >
+              <span class="lab-stop" />
+              <span class="lab-stage-name">{name}</span>
+              <span
+                class="lab-num"
+                data-lab={stage === 'decode' ? 'decode-count' : undefined}
+              >
+                {dims}
+              </span>
+            </button>
+          ))
+        }
+      </div>
+      <div data-lab="detail"></div>
+      <p class="lab-note" data-lab="stage-note"></p>
+    </div>
+
+    <div class="lab-left">
+      <p class="lab-label">Frame</p>
+      <div class="lab-thumbs" data-lab="thumbs">
+        {
+          frames.map((src, i) => (
+            <button
+              type="button"
+              data-src={src}
+              aria-pressed={i === 0 ? 'true' : 'false'}
+            >
+              <img src={src} alt={`Held-out frame ${i + 1}`} loading="lazy" />
+            </button>
+          ))
+        }
+        <label class="lab-drop" data-lab="drop">
+          <input type="file" accept="image/*" data-lab="upload" />
+          or drop your own
+        </label>
+      </div>
+
+      <p class="lab-label lab-spread">
+        <label for="lab-threshold">Threshold</label>
+        <output class="lab-num lab-accent" data-lab="threshold-value"
+          >0.50</output
+        >
+      </p>
+      <canvas class="lab-histogram" data-lab="histogram" width="440" height="84"
+      ></canvas>
+      <input
+        id="lab-threshold"
+        type="range"
+        min="0.05"
+        max="0.95"
+        step="0.01"
+        value="0.5"
+        data-lab="threshold"
+      />
+      <p class="lab-note" data-lab="gap"></p>
+
+      <p class="lab-label">Show</p>
+      <div class="lab-toggles">
+        {
+          TOGGLES.map(({ toggle, label, checked }) => (
+            <label>
+              <input type="checkbox" data-toggle={toggle} checked={checked} />
+              {label}
+            </label>
+          ))
+        }
+      </div>
+    </div>
+
+    <div class="lab-right">
+      <p class="lab-label">Inference</p>
+      <p class="lab-time" data-lab="time">…</p>
+      <p class="lab-note" data-lab="time-note"></p>
+      <div class="lab-backends" role="group" aria-label="Backend">
+        <button type="button" data-backend="WebGPU" disabled>WebGPU</button>
+        <button type="button" data-backend="CPU" disabled>CPU</button>
+      </div>
+
+      <div class="lab-readout" data-lab="readout"></div>
+
+      <p class="lab-label">Points</p>
+      <table class="lab-points">
+        <thead>
+          <tr><th>#</th><th>score</th><th>x</th><th>y</th></tr>
+        </thead>
+        <tbody data-lab="points"></tbody>
+      </table>
+      <p class="lab-note">
+        Pixels in the original frame. Hover a row, or a point, to match them up.
+      </p>
+    </div>
+  </div>
+  <figcaption><slot /></figcaption>
+</figure>
+
+<script>
+  import { mountLab } from '../../scripts/detector/lab';
+
+  document.querySelectorAll<HTMLElement>('.lab').forEach(mountLab);
+</script>
+
+<style>
+  .lab {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 0 var(--pad);
+  }
+
+  .lab-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+    width: 100%;
+    max-width: 600px;
+    margin-inline: auto;
+  }
+
+  .lab figcaption {
+    width: 100%;
+    max-width: 600px;
+    margin-inline: auto;
+  }
+
+  .lab-left,
+  .lab-right,
+  .lab-main,
+  .lab :global([data-lab='readout']) {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .lab p {
+    margin: 0;
+  }
+
+  .lab :global(.lab-label) {
+    font-size: 12.5px;
+    font-style: italic;
+    color: var(--note);
+  }
+
+  .lab-left .lab-label:not(:first-child),
+  .lab-right .lab-label:not(:first-child),
+  .lab-readout {
+    margin-top: 14px;
+  }
+
+  .lab :global(.lab-note) {
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--note);
+  }
+
+  .lab :global(.lab-num) {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 11px;
+    line-height: 1.7;
+    font-variant-numeric: tabular-nums;
+    color: var(--note);
+  }
+
+  .lab :global(.lab-ink) {
+    color: var(--ink);
+  }
+
+  .lab :global(.lab-spread) {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .lab-accent {
+    color: #e07a1f;
+  }
+
+  .lab-view {
+    position: relative;
+  }
+
+  .lab-view canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 3;
+    background: #14243d;
+    cursor: crosshair;
+  }
+
+  .lab-tip {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    padding: 2px 7px;
+    border: 1px solid var(--ink);
+    background: #ffffff;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 11px;
+    line-height: 16px;
+    pointer-events: none;
+  }
+
+  .lab-rail {
+    position: relative;
+    height: 52px;
+    margin-top: 8px;
+  }
+
+  .lab-rail::before {
+    content: '';
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    right: 5px;
+    height: 1px;
+    background: var(--tool-light);
+  }
+
+  .lab-rail button {
+    position: absolute;
+    top: 0;
+    left: calc(var(--k) * 25%);
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 0 0 4px;
+    border: 0;
+    background: none;
+    font: inherit;
+    color: var(--tool);
+    cursor: pointer;
+  }
+
+  .lab-rail button:first-child {
+    align-items: flex-start;
+    transform: none;
+  }
+
+  .lab-rail button:last-child {
+    left: auto;
+    right: 0;
+    align-items: flex-end;
+    transform: none;
+  }
+
+  @media (max-width: 599px) {
+    .lab-rail {
+      height: 36px;
+    }
+
+    .lab-rail .lab-num {
+      display: none;
+    }
+  }
+
+  .lab-stop {
+    position: relative;
+    width: 11px;
+    height: 11px;
+    border: 1px solid var(--tool);
+    border-radius: 50%;
+    background: #ffffff;
+  }
+
+  .lab-stage-name {
+    font-size: 12.5px;
+    white-space: nowrap;
+  }
+
+  .lab-rail button[aria-pressed='true'] {
+    color: var(--ink);
+  }
+
+  .lab-rail button[aria-pressed='true'] .lab-stop {
+    border-color: var(--ink);
+    background: var(--ink);
+  }
+
+  .lab-rail button:hover .lab-stop {
+    border-color: var(--ink);
+  }
+
+  .lab :global(.lab-channels) {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(22px, 1fr));
+    gap: 3px;
+  }
+
+  .lab :global(.lab-channels button) {
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+  }
+
+  .lab :global(.lab-channels canvas) {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1;
+    image-rendering: pixelated;
+  }
+
+  .lab :global(.lab-channels button.dead) {
+    opacity: 0.35;
+  }
+
+  .lab :global(.lab-channels button[aria-pressed='true']) {
+    outline: 1.5px solid var(--ink);
+    outline-offset: 1px;
+  }
+
+  .lab :global(.lab-tabs) {
+    display: flex;
+    gap: 18px;
+  }
+
+  .lab :global(.lab-tabs button),
+  .lab-backends button {
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: 12.5px;
+    color: var(--tool);
+    cursor: pointer;
+  }
+
+  .lab :global(.lab-tabs button[aria-pressed='true']),
+  .lab-backends button[aria-pressed='true'] {
+    color: var(--ink);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .lab-backends button:disabled {
+    cursor: default;
+    color: var(--tool-light);
+  }
+
+  .lab-thumbs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .lab-thumbs :global(button) {
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    opacity: 0.55;
+  }
+
+  .lab-thumbs :global(button[aria-pressed='true']) {
+    opacity: 1;
+    outline: 1.5px solid var(--ink);
+    outline-offset: 2px;
+  }
+
+  .lab-thumbs :global(img) {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+  }
+
+  .lab-drop {
+    position: relative;
+    display: grid;
+    place-items: center;
+    aspect-ratio: 4 / 3;
+    border: 1px dashed var(--tool);
+    font-size: 11.5px;
+    font-style: italic;
+    line-height: 1.3;
+    text-align: center;
+    color: var(--note);
+    cursor: pointer;
+  }
+
+  .lab-drop:global(.over) {
+    border-color: var(--ink);
+    color: var(--ink);
+  }
+
+  .lab-drop input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+  }
+
+  .lab-histogram {
+    width: 100%;
+    height: 42px;
+    border-bottom: 1px solid var(--ink);
+  }
+
+  input[type='range'] {
+    width: 100%;
+    margin: 0;
+    accent-color: #e07a1f;
+  }
+
+  .lab-toggles {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 12.5px;
+  }
+
+  .lab-toggles label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+  }
+
+  .lab-toggles input {
+    margin: 0;
+    accent-color: var(--ink);
+  }
+
+  .lab-time {
+    font-size: 34px;
+    font-weight: 300;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+
+  .lab-backends {
+    display: flex;
+    gap: 14px;
+  }
+
+  .lab :global(.lab-share) {
+    display: flex;
+    gap: 2px;
+    height: 8px;
+  }
+
+  .lab :global(.lab-share span) {
+    background: var(--tool-light);
+  }
+
+  .lab :global(.lab-share span.on) {
+    background: var(--ink);
+  }
+
+  .lab-points {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .lab-points th {
+    padding: 0 0 3px;
+    border-bottom: 1px solid var(--ink);
+    font-family: inherit;
+    font-weight: 400;
+    font-size: 10.5px;
+    color: var(--note);
+    text-align: right;
+  }
+
+  .lab-points :global(td) {
+    padding: 3px 0;
+    text-align: right;
+    cursor: default;
+  }
+
+  .lab-points th:first-child,
+  .lab-points :global(td:first-child) {
+    text-align: left;
+  }
+
+  .lab-points :global(tr.dim td) {
+    color: var(--tool);
+  }
+
+  .lab-points :global(tr.hot td) {
+    background: #fff3cc;
+  }
+
+  @media (min-width: 1180px) {
+    .lab {
+      padding: 0 40px;
+    }
+
+    .lab-grid {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 600px) minmax(0, 1fr);
+      gap: 0;
+      max-width: none;
+    }
+
+    .lab-left {
+      grid-column: 1;
+      grid-row: 1;
+      justify-self: end;
+      width: 100%;
+      max-width: 220px;
+      margin-right: 40px;
+    }
+
+    .lab-main {
+      grid-column: 2;
+      grid-row: 1;
+    }
+
+    .lab-right {
+      grid-column: 3;
+      grid-row: 1;
+      width: 100%;
+      max-width: 220px;
+      margin-left: 40px;
+    }
+
+    .lab-thumbs {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+</style>
