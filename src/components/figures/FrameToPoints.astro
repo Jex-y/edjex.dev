@@ -1,0 +1,882 @@
+---
+type Stripe = {
+  id: string;
+  angle: number;
+  ink: string;
+  paper: string;
+  line: number;
+  period: number;
+};
+type Slab = { x: number; y: number; fill: string; animation: string };
+type Flea = { x: number; y: number; drift: 'a' | 'b' | 'c' };
+type Orbit = { x: number; y: number; reverse: boolean; heading: number };
+
+const STRIPES: Stripe[] = [
+  { id: 's1', angle: 45, ink: '#9dc3ea', paper: '#eef5fc', line: 3, period: 7 },
+  {
+    id: 's2',
+    angle: -30,
+    ink: '#7fb0e2',
+    paper: '#e8f1fb',
+    line: 2,
+    period: 6,
+  },
+  { id: 's3', angle: 90, ink: '#b3d0ee', paper: '#f2f7fd', line: 3, period: 8 },
+  { id: 's4', angle: 10, ink: '#5f9bd9', paper: '#e4eefa', line: 2, period: 5 },
+  { id: 't1', angle: 60, ink: '#b49ae0', paper: '#f3eefb', line: 3, period: 6 },
+  {
+    id: 't2',
+    angle: -60,
+    ink: '#9b7bd6',
+    paper: '#efe8fa',
+    line: 2,
+    period: 5,
+  },
+  { id: 't3', angle: 0, ink: '#c7b3ea', paper: '#f6f2fc', line: 3, period: 7 },
+];
+
+const SLABS: Slab[] = [
+  ...[0, 1, 2, 3].map((k) => ({
+    x: 256 + k * 8,
+    y: 136 + k * 8,
+    fill: `url(#ftp-${STRIPES[k].id})`,
+    animation: `ftp-s${k + 1}`,
+  })),
+  ...[0, 1, 2].map((k) => ({
+    x: 406 + k * 8,
+    y: 144 + k * 8,
+    fill: `url(#ftp-${STRIPES[4 + k].id})`,
+    animation: `ftp-t${k + 1}`,
+  })),
+  { x: 546, y: 144, fill: 'url(#ftp-offset-y)', animation: 'ftp-h1' },
+  { x: 554, y: 152, fill: 'url(#ftp-offset-x)', animation: 'ftp-h2' },
+];
+const HEATMAP_SLAB = { x: 562, y: 160 };
+const MINI_PEAKS = [
+  [18, 16],
+  [34, 52],
+  [14, 62],
+  [61, 17],
+  [68, 49],
+];
+
+const FLEAS: Flea[] = [
+  { x: 35, y: 31.5, drift: 'a' },
+  { x: 65, y: 103.5, drift: 'b' },
+  { x: 25, y: 121.5, drift: 'c' },
+];
+const ORBITS: Orbit[] = [
+  { x: 110, y: 34, reverse: false, heading: 90 },
+  { x: 124, y: 96, reverse: true, heading: -90 },
+];
+const PEAKS = [
+  [35, 31],
+  [65, 103],
+  [25, 121],
+  [125, 34],
+  [139, 96],
+];
+const INPUT = { x: 64, y: 110 };
+const HEATMAP = { x: 300, y: 320 };
+const POINTS = { x: 524, y: 320 };
+const FRAME = 150;
+
+const TIMELINE = [
+  ['frame', 64],
+  ['conv', 131],
+  ['conv', 214],
+  ['head', 289],
+  ['heatmap', 350],
+  ['points', 425],
+  ['stressed ones flagged · 10 s loop', 530],
+] as const;
+---
+
+<figure class="full wide-figure motion frame-to-points">
+  <svg
+    viewBox="44 100 792 440"
+    width="100%"
+    role="img"
+    aria-label="A frame of water fleas passes through two convolutions and a head with three outputs; the heatmap's peaks are kept by a 3 by 3 max-pool and become points, each with an offset and a heading, and the fleas circling in place are flagged as stressed"
+  >
+    <defs>
+      {
+        STRIPES.map(({ id, angle, ink, paper, line, period }) => (
+          <pattern
+            id={`ftp-${id}`}
+            width={period}
+            height={period}
+            patternUnits="userSpaceOnUse"
+            patternTransform={`rotate(${angle})`}
+          >
+            <rect width={period} height={period} fill={paper} />
+            <rect width={line} height={period} fill={ink} />
+          </pattern>
+        ))
+      }
+      <linearGradient id="ftp-offset-y" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#3b6fb6"></stop>
+        <stop offset="0.5" stop-color="#f4f1ea"></stop>
+        <stop offset="1" stop-color="#c0533a"></stop>
+      </linearGradient>
+      <linearGradient id="ftp-offset-x" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#3b6fb6"></stop>
+        <stop offset="0.5" stop-color="#f4f1ea"></stop>
+        <stop offset="1" stop-color="#c0533a"></stop>
+      </linearGradient>
+      <radialGradient id="ftp-peak">
+        <stop offset="0" stop-color="#fff6d8"></stop>
+        <stop offset="0.12" stop-color="#fff6d8"></stop>
+        <stop offset="0.33" stop-color="#9fe0c8"></stop>
+        <stop offset="0.58" stop-color="#3c9bb0"></stop>
+        <stop offset="0.8" stop-color="#285a8c" stop-opacity="0.55"></stop>
+        <stop offset="1" stop-color="#285a8c" stop-opacity="0"></stop>
+      </radialGradient>
+      <radialGradient id="ftp-mini">
+        <stop offset="0" stop-color="#fff6d8"></stop>
+        <stop offset="0.4" stop-color="#9fe0c8"></stop>
+        <stop offset="1" stop-color="#3c9bb0" stop-opacity="0"></stop>
+      </radialGradient>
+      <pattern
+        id="ftp-grid"
+        width="8"
+        height="8"
+        patternUnits="userSpaceOnUse"
+        x={HEATMAP.x}
+        y={HEATMAP.y}
+      >
+        <path
+          d="M 8 0 H 0 V 8"
+          fill="none"
+          stroke="#ffffff"
+          stroke-opacity="0.06"></path>
+      </pattern>
+      {
+        [INPUT, HEATMAP, POINTS].map(({ x, y }, k) => (
+          <clipPath id={`ftp-clip-${k}`}>
+            <rect x={x} y={y} width={FRAME} height={FRAME} />
+          </clipPath>
+        ))
+      }
+      <clipPath id="ftp-clip-slab">
+        <rect x={HEATMAP_SLAB.x} y={HEATMAP_SLAB.y} width="76" height="76"
+        ></rect>
+      </clipPath>
+    </defs>
+
+    <g fill="none" stroke="#000000" stroke-width="1">
+      <path d="M 214 185 H 254 M 362 185 H 404 M 502 185 H 544"></path>
+      <path d="M 638 198 H 650 V 300 H 375 V 318"></path>
+      <path d="M 450 395 H 520"></path>
+    </g>
+
+    <g clip-path="url(#ftp-clip-0)">
+      <rect x={INPUT.x} y={INPUT.y} width={FRAME} height={FRAME} fill="#dcebee"
+      ></rect>
+      <g transform={`translate(${INPUT.x} ${INPUT.y})`}>
+        {
+          FLEAS.map(({ x, y, drift }) => (
+            <g class={`ftp-drift-${drift}`}>
+              <ellipse class="ftp-flea" cx={x} cy={y} rx="5" ry="3.5" />
+            </g>
+          ))
+        }
+        {
+          ORBITS.map(({ x, y, reverse }) => (
+            <g transform={`translate(${x} ${y})`}>
+              <g class={reverse ? 'ftp-orbit ftp-reverse' : 'ftp-orbit'}>
+                <ellipse class="ftp-flea" cx="15" cy="0.5" rx="5" ry="3.5" />
+              </g>
+            </g>
+          ))
+        }
+      </g>
+    </g>
+    <rect
+      x={INPUT.x + 0.5}
+      y={INPUT.y + 0.5}
+      width={FRAME - 1}
+      height={FRAME - 1}
+      fill="none"
+      stroke="#000000"></rect>
+
+    {
+      SLABS.map(({ x, y, fill, animation }) => (
+        <rect
+          class="ftp-slab"
+          style={`animation-name: ${animation}`}
+          x={x + 0.5}
+          y={y + 0.5}
+          width="75"
+          height="75"
+          fill={fill}
+          stroke="#000000"
+        />
+      ))
+    }
+    <g class="ftp-slab" style="animation-name: ftp-h3">
+      <rect
+        x={HEATMAP_SLAB.x + 0.5}
+        y={HEATMAP_SLAB.y + 0.5}
+        width="75"
+        height="75"
+        fill="#14243d"
+        stroke="#000000"></rect>
+      <g clip-path="url(#ftp-clip-slab)">
+        {
+          MINI_PEAKS.map(([x, y]) => (
+            <circle
+              cx={HEATMAP_SLAB.x + x}
+              cy={HEATMAP_SLAB.y + y}
+              r="10"
+              fill="url(#ftp-mini)"
+            />
+          ))
+        }
+      </g>
+    </g>
+
+    <g clip-path="url(#ftp-clip-1)">
+      <rect
+        x={HEATMAP.x}
+        y={HEATMAP.y}
+        width={FRAME}
+        height={FRAME}
+        fill="#14243d"></rect>
+      <rect
+        x={HEATMAP.x}
+        y={HEATMAP.y}
+        width={FRAME}
+        height={FRAME}
+        fill="url(#ftp-grid)"></rect>
+      {
+        PEAKS.map(([x, y]) => (
+          <circle
+            class="ftp-peak"
+            cx={HEATMAP.x + x}
+            cy={HEATMAP.y + y}
+            r="23"
+            fill="url(#ftp-peak)"
+          />
+        ))
+      }
+      {
+        PEAKS.map(([x, y]) => (
+          <rect
+            class="ftp-pool"
+            x={HEATMAP.x + x - 10.5}
+            y={HEATMAP.y + y - 10.5}
+            width="21"
+            height="21"
+            fill="none"
+            stroke="#fff6d8"
+            stroke-width="1.5"
+            stroke-dasharray="3 2"
+          />
+        ))
+      }
+    </g>
+
+    <g clip-path="url(#ftp-clip-2)">
+      <rect
+        x={POINTS.x}
+        y={POINTS.y}
+        width={FRAME}
+        height={FRAME}
+        fill="#dcebee"></rect>
+      <g transform={`translate(${POINTS.x} ${POINTS.y})`}>
+        {
+          FLEAS.map(({ x, y, drift }) => (
+            <g class={`ftp-drift-${drift}`}>
+              <ellipse class="ftp-flea" cx={x} cy={y} rx="5" ry="3.5" />
+              <g transform={`translate(${x} ${y})`}>
+                <rect class="ftp-mark" x="-9" y="-9" width="18" height="18" />
+                <circle class="ftp-mark" cx="1" cy="-2" r="2" fill="#14213d" />
+                <g class={`ftp-vec ftp-vec-${drift}`}>
+                  <line x1="0" y1="0" x2="20" y2="0" />
+                  <path d="M 19 -3.75 L 25 0 L 19 3.75 Z" />
+                </g>
+              </g>
+            </g>
+          ))
+        }
+        {
+          ORBITS.map(({ x, y, reverse, heading }) => (
+            <g transform={`translate(${x} ${y})`}>
+              <g class={reverse ? 'ftp-orbit ftp-reverse' : 'ftp-orbit'}>
+                <ellipse class="ftp-flea" cx="15" cy="0.5" rx="5" ry="3.5" />
+                <g transform="translate(15 0.5)">
+                  <rect
+                    class="ftp-mark ftp-stressed"
+                    x="-9"
+                    y="-9"
+                    width="18"
+                    height="18"
+                  />
+                  <circle
+                    class="ftp-mark"
+                    cx="1"
+                    cy="-2"
+                    r="2"
+                    fill="#14213d"
+                  />
+                  <g class="ftp-vec" transform={`rotate(${heading})`}>
+                    <line x1="0" y1="0" x2="20" y2="0" />
+                    <path d="M 19 -3.75 L 25 0 L 19 3.75 Z" />
+                  </g>
+                </g>
+              </g>
+            </g>
+          ))
+        }
+      </g>
+    </g>
+    <rect
+      x={POINTS.x + 0.5}
+      y={POINTS.y + 0.5}
+      width={FRAME - 1}
+      height={FRAME - 1}
+      fill="none"
+      stroke="#000000"></rect>
+    <rect
+      x={HEATMAP.x + 0.5}
+      y={HEATMAP.y + 0.5}
+      width={FRAME - 1}
+      height={FRAME - 1}
+      fill="none"
+      stroke="#14243d"></rect>
+
+    <circle class="ftp-pulse" r="4" fill="#e07a1f"></circle>
+
+    <g font-size="12" fill="#5f5f5f">
+      <text x="64" y="280"><tspan font-style="italic">input</tspan></text>
+      <text x="64" y="296">192 × 192 × 3</text>
+      <text x="256" y="280"
+        ><tspan font-style="italic">conv 3×3, stride 2</tspan></text
+      >
+      <text x="256" y="296">96 × 96 × 48</text>
+      <text x="406" y="280"><tspan font-style="italic">conv 3×3</tspan></text>
+      <text x="406" y="296">96 × 96 × 24</text>
+      <text x="546" y="280"
+        ><tspan font-style="italic">head, conv 3×3</tspan></text
+      >
+      <text x="546" y="296">96 × 96 × 3</text>
+      <text x="300" y="490"
+        ><tspan font-style="italic">heatmap, after sigmoid</tspan></text
+      >
+      <text x="300" y="506">a 3 × 3 max-pool keeps the peaks</text>
+      <text x="524" y="490"
+        ><tspan font-style="italic">points, tracked</tspan></text
+      >
+      <text x="524" y="506">cell, offset and heading</text>
+      <text x="660" y="148">KEYNAS5-204: two</text>
+      <text x="660" y="165">convolutions and a head.</text>
+      <text x="660" y="182">Every cell of the 96 × 96</text>
+      <text x="660" y="199">output scores how likely a</text>
+      <text x="660" y="216">flea's centre is there, and</text>
+      <text x="660" y="233">where in the cell it sits.</text>
+      <text x="64" y="342">No boxes and no classes: the</text>
+      <text x="64" y="359">network only says where each</text>
+      <text x="64" y="376">animal is. How it moves is</text>
+      <text x="64" y="393">what matters.</text>
+    </g>
+    <text
+      class="ftp-tag"
+      x="690"
+      y="356"
+      font-size="13"
+      font-style="italic"
+      fill="#c0392b">circling:</text
+    >
+    <text
+      class="ftp-tag"
+      x="690"
+      y="373"
+      font-size="13"
+      font-style="italic"
+      fill="#c0392b">stressed</text
+    >
+
+    <g font-size="11" fill="#5f5f5f">
+      <rect
+        x="690.75"
+        y="400.75"
+        width="8.5"
+        height="8.5"
+        fill="none"
+        stroke="#14213d"
+        stroke-width="1.5"></rect>
+      <text x="708" y="409">output cell</text>
+      <circle cx="695" cy="423" r="2" fill="#14213d"></circle>
+      <text x="708" y="427">offset point</text>
+      <rect x="690" y="440" width="10" height="1.5" fill="#e07a1f"></rect>
+      <text x="708" y="445">heading</text>
+    </g>
+
+    <line x1="64" y1="512.5" x2="816" y2="512.5" stroke="#cdcdcd"></line>
+    <rect class="ftp-head" x="63" y="506" width="2" height="13" fill="#000000"
+    ></rect>
+    <g font-size="11" fill="#5f5f5f">
+      {
+        TIMELINE.map(([label, x]) => (
+          <text x={x} y="533">
+            {label}
+          </text>
+        ))
+      }
+    </g>
+  </svg>
+  <figcaption><slot /></figcaption>
+</figure>
+
+<script>
+  import { playWhenVisible } from '../../scripts/motion';
+
+  document.querySelectorAll('.frame-to-points').forEach(playWhenVisible);
+</script>
+
+<style>
+  svg {
+    max-width: 880px;
+  }
+
+  .frame-to-points :global(*) {
+    animation-play-state: paused;
+  }
+
+  .frame-to-points:global(.playing) :global(*) {
+    animation-play-state: running;
+  }
+
+  .ftp-flea {
+    fill: #9a4a26;
+    stroke: #c97a45;
+    stroke-width: 1.5;
+  }
+
+  .ftp-drift-a {
+    animation: ftp-drift-a 10s ease-in-out infinite;
+  }
+
+  .ftp-drift-b {
+    animation: ftp-drift-b 10s ease-in-out infinite;
+  }
+
+  .ftp-drift-c {
+    animation: ftp-drift-c 10s ease-in-out infinite;
+  }
+
+  @keyframes ftp-drift-a {
+    50% {
+      transform: translate(14px, 6px);
+    }
+  }
+
+  @keyframes ftp-drift-b {
+    50% {
+      transform: translate(-10px, -8px);
+    }
+  }
+
+  @keyframes ftp-drift-c {
+    50% {
+      transform: translate(12px, -6px);
+    }
+  }
+
+  .ftp-orbit {
+    animation: ftp-orbit 2.4s linear infinite;
+  }
+
+  .ftp-reverse {
+    animation-direction: reverse;
+  }
+
+  @keyframes ftp-orbit {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .ftp-slab {
+    animation-duration: 10s;
+    animation-iteration-count: infinite;
+    animation-timing-function: ease-out;
+  }
+
+  @keyframes ftp-s1 {
+    0%,
+    8% {
+      opacity: 0;
+      transform: translateX(-18px);
+    }
+    11%,
+    92% {
+      opacity: 1;
+      transform: none;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+
+  @keyframes ftp-s2 {
+    0%,
+    10% {
+      opacity: 0;
+      transform: translateX(-18px);
+    }
+    13%,
+    92% {
+      opacity: 1;
+      transform: none;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+
+  @keyframes ftp-s3 {
+    0%,
+    12% {
+      opacity: 0;
+      transform: translateX(-18px);
+    }
+    15%,
+    92% {
+      opacity: 1;
+      transform: none;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+
+  @keyframes ftp-s4 {
+    0%,
+    14% {
+      opacity: 0;
+      transform: translateX(-18px);
+    }
+    17%,
+    92% {
+      opacity: 1;
+      transform: none;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+
+  @keyframes ftp-t1 {
+    0%,
+    20% {
+      opacity: 0;
+      transform: translateX(-18px);
+    }
+    23%,
+    92% {
+      opacity: 1;
+      transform: none;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+
+  @keyframes ftp-t2 {
+    0%,
+    22% {
+      opacity: 0;
+      transform: translateX(-18px);
+    }
+    25%,
+    92% {
+      opacity: 1;
+      transform: none;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+
+  @keyframes ftp-t3 {
+    0%,
+    24% {
+      opacity: 0;
+      transform: translateX(-18px);
+    }
+    27%,
+    92% {
+      opacity: 1;
+      transform: none;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+
+  @keyframes ftp-h1 {
+    0%,
+    30% {
+      opacity: 0;
+      transform: translateX(-18px);
+    }
+    33%,
+    92% {
+      opacity: 1;
+      transform: none;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+
+  @keyframes ftp-h2 {
+    0%,
+    32% {
+      opacity: 0;
+      transform: translateX(-18px);
+    }
+    35%,
+    92% {
+      opacity: 1;
+      transform: none;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+
+  @keyframes ftp-h3 {
+    0%,
+    34% {
+      opacity: 0;
+      transform: translateX(-18px);
+    }
+    37%,
+    92% {
+      opacity: 1;
+      transform: none;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+
+  .ftp-peak {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: ftp-peak 10s ease-out infinite;
+  }
+
+  @keyframes ftp-peak {
+    0%,
+    38% {
+      opacity: 0;
+      transform: scale(0.2);
+    }
+    47%,
+    92% {
+      opacity: 1;
+      transform: none;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+
+  .ftp-pool {
+    opacity: 0;
+    animation: ftp-pool 10s linear infinite;
+  }
+
+  @keyframes ftp-pool {
+    48%,
+    56% {
+      opacity: 1;
+    }
+    0%,
+    46%,
+    58%,
+    100% {
+      opacity: 0;
+    }
+  }
+
+  rect.ftp-mark {
+    fill: none;
+    stroke: #14213d;
+    stroke-width: 1.5;
+  }
+
+  .ftp-mark {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: ftp-mark 10s ease-out infinite;
+  }
+
+  @keyframes ftp-mark {
+    0%,
+    52% {
+      opacity: 0;
+      transform: scale(2.2);
+    }
+    56%,
+    92% {
+      opacity: 1;
+      transform: none;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+
+  rect.ftp-stressed {
+    animation:
+      ftp-mark 10s ease-out infinite,
+      ftp-stressed 10s linear infinite;
+  }
+
+  @keyframes ftp-stressed {
+    0%,
+    63%,
+    100% {
+      stroke: #14213d;
+    }
+    66%,
+    92% {
+      stroke: #c0392b;
+    }
+  }
+
+  .ftp-vec {
+    stroke: #e07a1f;
+    stroke-width: 1.5;
+    fill: #e07a1f;
+  }
+
+  .ftp-vec-a {
+    animation: ftp-vec-a 10s linear infinite;
+  }
+
+  .ftp-vec-b {
+    animation: ftp-vec-b 10s linear infinite;
+  }
+
+  .ftp-vec-c {
+    animation: ftp-vec-c 10s linear infinite;
+  }
+
+  @keyframes ftp-vec-a {
+    0%,
+    49.9% {
+      transform: rotate(23deg);
+    }
+    50%,
+    100% {
+      transform: rotate(203deg);
+    }
+  }
+
+  @keyframes ftp-vec-b {
+    0%,
+    49.9% {
+      transform: rotate(219deg);
+    }
+    50%,
+    100% {
+      transform: rotate(39deg);
+    }
+  }
+
+  @keyframes ftp-vec-c {
+    0%,
+    49.9% {
+      transform: rotate(-27deg);
+    }
+    50%,
+    100% {
+      transform: rotate(153deg);
+    }
+  }
+
+  .ftp-tag {
+    animation: ftp-tag 10s ease-out infinite;
+  }
+
+  @keyframes ftp-tag {
+    0%,
+    64% {
+      opacity: 0;
+    }
+    68%,
+    92% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+
+  .ftp-pulse {
+    opacity: 0;
+    animation: ftp-pulse 10s linear infinite;
+  }
+
+  @keyframes ftp-pulse {
+    0%,
+    5% {
+      transform: translate(214px, 185px);
+      opacity: 0;
+    }
+    6% {
+      transform: translate(214px, 185px);
+      opacity: 1;
+    }
+    18% {
+      transform: translate(400px, 185px);
+    }
+    29% {
+      transform: translate(540px, 185px);
+    }
+    38% {
+      transform: translate(650px, 198px);
+    }
+    40% {
+      transform: translate(650px, 300px);
+    }
+    43% {
+      transform: translate(375px, 300px);
+    }
+    45% {
+      transform: translate(375px, 320px);
+      opacity: 1;
+    }
+    46%,
+    100% {
+      transform: translate(375px, 320px);
+      opacity: 0;
+    }
+  }
+
+  .ftp-head {
+    animation: ftp-head 10s linear infinite;
+  }
+
+  @keyframes ftp-head {
+    to {
+      transform: translateX(752px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .frame-to-points :global(*) {
+      animation: none !important;
+    }
+
+    .ftp-pulse {
+      display: none;
+    }
+  }
+</style>
