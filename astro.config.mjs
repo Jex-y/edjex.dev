@@ -22,6 +22,16 @@ export default defineConfig({
                 pages: {
                         [`${base}cv`]: {
                                 path: '/cv.pdf',
+                                // Tag links back to the site so visits from the PDF show up in analytics
+                                callback: (page) =>
+                                        page.$$eval('a[href^="https://edjex.dev"]', (links) => {
+                                                for (const link of links) {
+                                                        const url = new URL(link.href);
+                                                        url.searchParams.set('utm_source', 'cv-pdf');
+                                                        url.searchParams.set('utm_medium', 'pdf');
+                                                        link.href = url.href;
+                                                }
+                                        }),
                                 pdf: {
                                         format: 'A4',
                                         printBackground: true,
