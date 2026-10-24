@@ -7,6 +7,7 @@ import rehypeFigure from '@microflash/rehype-figure';
 import rehypeSlug from 'rehype-slug';
 
 import mdx from '@astrojs/mdx';
+import sitemap from '@astrojs/sitemap';
 import pdf from 'astro-pdf';
 
 
@@ -17,7 +18,7 @@ const base = process.env.PREVIEW_BASE ?? '/';
 export default defineConfig({
         site: 'https://edjex.dev',
         base,
-        integrations: [mdx(), pdf({
+        integrations: [mdx(), sitemap(), pdf({
                 pages: {
                         [`${base}cv`]: {
                                 path: '/cv.pdf',
