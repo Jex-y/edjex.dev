@@ -1,0 +1,102 @@
+---
+import model from '../../assets/strikethrough/hybrid-int8.onnx?url';
+import { SAMPLE_LINE } from '../../scripts/strikethrough/line';
+---
+
+<figure class="live-strikethrough" data-model={model}>
+  <canvas width="1024" height="64"></canvas>
+  <p class="prediction"></p>
+  <div class="controls">
+    {
+      SAMPLE_LINE.map(({ text, strike, underline }, index) => (
+        <div class="span-controls">
+          <span>{text.trim()}</span>
+          <button
+            type="button"
+            data-span={index}
+            data-mark="strike"
+            aria-pressed={String(strike)}
+            disabled
+          >
+            Strike
+          </button>
+          <button
+            type="button"
+            data-span={index}
+            data-mark="underline"
+            aria-pressed={String(underline)}
+            disabled
+          >
+            Underline
+          </button>
+        </div>
+      ))
+    }
+  </div>
+  <p class="status" aria-live="polite">Loading the model…</p>
+  <figcaption><slot /></figcaption>
+</figure>
+
+<script>
+  import { mountLiveStrikethrough } from '../../scripts/strikethrough/figure';
+
+  document
+    .querySelectorAll<HTMLElement>('.live-strikethrough')
+    .forEach(mountLiveStrikethrough);
+</script>
+
+<style>
+  canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    background: #fff;
+    outline: 1px solid var(--tool-light);
+  }
+
+  .prediction {
+    margin: 10px 0 0;
+    min-height: 1.5em;
+  }
+
+  .controls {
+    margin-top: 8px;
+    font-size: 12.5px;
+  }
+
+  .span-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px 12px;
+    align-items: baseline;
+  }
+
+  .span-controls span {
+    flex: 1 1 12em;
+  }
+
+  .status {
+    margin: 6px 0 0;
+    font-size: 12.5px;
+    color: var(--note);
+  }
+
+  button {
+    font: inherit;
+    padding: 0;
+    color: var(--note);
+    background: none;
+    border: 0;
+    cursor: pointer;
+  }
+
+  button[aria-pressed='true'] {
+    color: inherit;
+    text-decoration: underline;
+  }
+
+  button:disabled {
+    cursor: default;
+    opacity: 0.5;
+  }
+</style>
