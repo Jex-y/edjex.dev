@@ -1,38 +1,96 @@
 ---
 import model from '../../assets/strikethrough/hybrid-int8.onnx?url';
-import { SAMPLE_LINE } from '../../scripts/strikethrough/line';
 ---
 
-<figure class="live-strikethrough" data-model={model}>
-  <canvas width="1024" height="64"></canvas>
-  <p class="prediction"></p>
-  <div class="controls">
-    {
-      SAMPLE_LINE.map(({ text, strike, underline }, index) => (
-        <div class="span-controls">
-          <span>{text.trim()}</span>
-          <button
-            type="button"
-            data-span={index}
-            data-mark="strike"
-            aria-pressed={String(strike)}
-            disabled
-          >
-            Strike
-          </button>
-          <button
-            type="button"
-            data-span={index}
-            data-mark="underline"
-            aria-pressed={String(underline)}
-            disabled
-          >
-            Underline
-          </button>
-        </div>
-      ))
-    }
+<figure class="full live-strikethrough" data-model={model}>
+  <div class="heading">
+    <span class="row-title">Your line</span>
+    <div class="field">
+      <div class="editor"></div>
+      <button type="button" data-mark="strike" aria-pressed="false" disabled>
+        Strike
+      </button>
+      <button type="button" data-mark="underline" aria-pressed="false" disabled>
+        Underline
+      </button>
+      <span class="count"></span>
+    </div>
   </div>
+  <div class="heading">
+    <span class="row-title">Character</span>
+    <p class="readout"></p>
+  </div>
+
+  <div
+    class="scroller"
+    tabindex="0"
+    role="group"
+    aria-label="Model outputs by character. Use the left and right arrow keys to move between characters."
+  >
+    <div class="row-label">
+      <span>Attention Map</span>
+    </div>
+    <div class="plot input">
+      <canvas class="raster" width="1024" height="64"></canvas>
+      <canvas class="heat" width="0" height="0"></canvas>
+    </div>
+
+    <div class="plot weights">
+      <canvas
+        class="matrix"
+        width="0"
+        height="0"
+        role="img"
+        aria-label="Attention of every character across the line"></canvas>
+      <div class="row-mark" hidden></div>
+    </div>
+
+    <div class="row-label">
+      <span>p(strike)</span>
+    </div>
+    <svg
+      class="plot bars strike"
+      data-channel="strike"
+      preserveAspectRatio="none"
+      role="img"
+      aria-label="Strike probability per character"></svg>
+
+    <div class="row-label">
+      <span>p(underline)</span>
+    </div>
+    <svg
+      class="plot bars underline"
+      data-channel="underline"
+      preserveAspectRatio="none"
+      role="img"
+      aria-label="Underline probability per character"></svg>
+
+    <div class="row-label">
+      <span>Output</span>
+    </div>
+    <div class="plot output">
+      <div class="glyphs" aria-hidden="true"></div>
+    </div>
+
+    <div class="overlay"><div class="cursor" hidden></div></div>
+  </div>
+
+  <p class="prediction sr-only"></p>
+  <details class="values">
+    <summary>All values</summary>
+    <div class="table-scroller">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Character</th>
+            <th scope="col">Strike</th>
+            <th scope="col">Underline</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </details>
   <p class="status" aria-live="polite">Loading the model…</p>
   <figcaption><slot /></figcaption>
 </figure>
@@ -46,57 +104,298 @@ import { SAMPLE_LINE } from '../../scripts/strikethrough/line';
 </script>
 
 <style>
-  canvas {
+  .live-strikethrough {
+    --strike: #c0533a;
+    --underline: var(--water);
+    --line-width: 975;
+    --label-width: 140px;
+    --row-gap: 14px;
+    --plot-width: clamp(
+      calc(var(--line-width) * 1px),
+      calc(100% - var(--label-width)),
+      calc(var(--line-width) * 1.25px)
+    );
+    display: flex;
+    flex-direction: column;
+    gap: var(--row-gap);
+    width: min(1360px, 100% - 2 * var(--pad));
+    margin-inline: auto;
+  }
+
+  .heading {
+    display: grid;
+    grid-template-columns: var(--label-width) minmax(0, 1fr);
+    align-items: baseline;
+  }
+
+  .row-title,
+  .row-note,
+  .status,
+  .values,
+  .count,
+  button {
+    font-size: 12.5px;
+    color: var(--note);
+  }
+
+  .field {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px 16px;
+    padding: 8px 12px;
+    outline: 1px solid var(--tool-light);
+    outline-offset: -1px;
+  }
+
+  .field:focus-within {
+    outline: 2px solid var(--water);
+    outline-offset: -2px;
+  }
+
+  .editor {
+    flex: 1 1 16em;
+    min-width: 0;
+  }
+
+  .editor :global(.ProseMirror) {
+    outline: none;
+  }
+
+  .editor :global(.ProseMirror p) {
+    margin: 0;
+  }
+
+  .count {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .readout {
+    margin: 0;
+    min-height: 1.5em;
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+    font-size: 13px;
+    white-space: pre-wrap;
+  }
+
+  .scroller {
+    position: relative;
+    display: grid;
+    grid-template-columns: var(--label-width) var(--plot-width);
+    grid-template-rows: repeat(5, auto);
+    row-gap: var(--row-gap);
+    overflow-x: auto;
+    cursor: crosshair;
+  }
+
+  .row-label {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    padding-right: 16px;
+    font-size: 12.5px;
+    line-height: 1.4;
+    background: var(--paper);
+  }
+
+  .plot {
+    grid-column: 2;
+    position: relative;
+    display: block;
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .input {
+    isolation: isolate;
+    outline: 1px solid var(--tool-light);
+    outline-offset: -1px;
+  }
+
+  .raster {
     display: block;
     width: 100%;
     height: auto;
     background: #fff;
-    outline: 1px solid var(--tool-light);
   }
 
-  .prediction {
-    margin: 10px 0 0;
-    min-height: 1.5em;
+  .heat {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    mix-blend-mode: multiply;
+    image-rendering: pixelated;
   }
 
-  .controls {
-    margin-top: 8px;
-    font-size: 12.5px;
+  .weights {
+    height: 320px;
   }
 
-  .span-controls {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 2px 12px;
-    align-items: baseline;
+  .matrix {
+    display: block;
+    height: 100%;
+    image-rendering: pixelated;
   }
 
-  .span-controls span {
-    flex: 1 1 12em;
+  .row-mark {
+    position: absolute;
+    left: 0;
+    right: 0;
+    min-height: 2px;
+    outline: 1px solid var(--ink);
+  }
+
+  .bars {
+    height: 44px;
+  }
+
+  .bars :global(.bar) {
+    fill: var(--mark);
+  }
+
+  .strike {
+    --mark: var(--strike);
+  }
+
+  .underline {
+    --mark: var(--underline);
+  }
+
+  .bars :global(line) {
+    vector-effect: non-scaling-stroke;
+  }
+
+  .bars :global(.threshold) {
+    stroke: var(--note);
+    stroke-dasharray: 3 3;
+  }
+
+  .bars :global(.baseline) {
+    stroke: var(--tool-light);
+  }
+
+  .output {
+    container-type: inline-size;
+    aspect-ratio: var(--line-width) / 64;
+  }
+
+  .glyphs {
+    position: absolute;
+    inset: 0;
+    font-family: 'Times New Roman', Times, serif;
+    line-height: calc(64 / 38);
+  }
+
+  .glyphs :global(span) {
+    position: absolute;
+    top: 0;
+    white-space: pre;
+  }
+
+  .glyphs :global(i) {
+    position: absolute;
+    background: var(--ink);
+  }
+
+  .overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    grid-column: 2 / 3;
+    grid-row: 1 / -1;
+    pointer-events: none;
+  }
+
+  .cursor {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    background: rgb(0 0 0 / 0.09);
+  }
+
+  .values summary {
+    cursor: pointer;
+  }
+
+  .table-scroller {
+    max-height: 240px;
+    margin-top: 4px;
+    overflow-y: auto;
+  }
+
+  .values table {
+    border-collapse: collapse;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .values th,
+  .values td {
+    padding: 1px 16px 1px 0;
+    font-weight: 400;
+    text-align: left;
   }
 
   .status {
-    margin: 6px 0 0;
-    font-size: 12.5px;
-    color: var(--note);
+    margin: 0;
+  }
+
+  figcaption:empty {
+    display: none;
   }
 
   button {
-    font: inherit;
     padding: 0;
-    color: var(--note);
+    font-family: inherit;
     background: none;
     border: 0;
     cursor: pointer;
   }
 
   button[aria-pressed='true'] {
-    color: inherit;
+    color: var(--ink);
     text-decoration: underline;
   }
 
   button:disabled {
     cursor: default;
     opacity: 0.5;
+  }
+
+  @media (max-width: 720px) {
+    .live-strikethrough {
+      --label-width: 0px;
+    }
+
+    .heading {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .editor {
+      flex-basis: 100%;
+    }
+
+    .scroller {
+      grid-template-columns: var(--plot-width);
+      grid-template-rows: repeat(10, auto);
+      row-gap: 6px;
+    }
+
+    .plot {
+      grid-column: 1;
+    }
+
+    .overlay {
+      grid-column: 1 / 2;
+    }
+
+    .row-label {
+      width: max-content;
+      max-width: calc(100vw - 2 * var(--pad));
+      margin-top: 8px;
+    }
   }
 </style>

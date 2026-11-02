@@ -3,16 +3,37 @@ import type { EncodedText } from './encoding';
 
 export const IMAGE_HEIGHT = 64;
 const MAX_IMAGE_WIDTH = 4096;
-const MAX_CHARACTERS = 160;
+export const MAX_CHARACTERS = 160;
 const WIDTH_STEP = 4;
 const CANVAS_STEP = 64;
-const THRESHOLD = 0.5;
+export const THRESHOLD = 0.5;
+const TOKEN_ROWS = 4;
+export const TOKEN_WIDTH = 4;
 
 /** RGBA rows, as in `ImageData`. */
 export type Raster = {
   readonly width: number;
   readonly height: number;
   readonly data: Uint8ClampedArray;
+};
+
+export type CharacterReading = {
+  readonly strike: number;
+  readonly underline: number;
+  readonly strikeLogit: number;
+  readonly underlineLogit: number;
+};
+
+/** Each character's attention over the image tokens, averaged across heads. */
+export type AttentionMap = {
+  readonly characters: number;
+  readonly rows: number;
+  /** Tokens per row, including those over the padding of the batch canvas. */
+  readonly columns: number;
+  /** Tokens per row that cover the line. */
+  readonly validColumns: number;
+  /** Flattened from `[characters, rows, columns]`. */
+  readonly weights: Float32Array;
 };
 
 export type CharacterStyle = {
@@ -87,19 +108,58 @@ export const modelFeeds = (
   };
 };
 
-/** `probabilities` is `[batch, characters, 2]`, ordered strike then underline. */
-export const characterStyles = (
-  outputs: Outputs,
-): readonly CharacterStyle[] => {
-  const { data } = outputs.probabilities;
+const float32Output = (outputs: Outputs, name: string): Float32Array => {
+  const { data } = outputs[name];
   if (!(data instanceof Float32Array)) {
-    throw new TypeError('Expected float32 probabilities.');
+    throw new TypeError(`Expected float32 ${name}.`);
   }
-  return Array.from({ length: data.length / 2 }, (_, index) => ({
-    strike: data[index * 2] >= THRESHOLD,
-    underline: data[index * 2 + 1] >= THRESHOLD,
+  return data;
+};
+
+/** `probabilities` and `logits` are `[batch, characters, 2]`, ordered strike then underline. */
+export const characterReadings = (
+  outputs: Outputs,
+): readonly CharacterReading[] => {
+  const probabilities = float32Output(outputs, 'probabilities');
+  const logits = float32Output(outputs, 'logits');
+  return Array.from({ length: probabilities.length / 2 }, (_, index) => ({
+    strike: probabilities[index * 2],
+    underline: probabilities[index * 2 + 1],
+    strikeLogit: logits[index * 2],
+    underlineLogit: logits[index * 2 + 1],
   }));
 };
+
+/** `attention` is `[batch, heads, characters, tokens]`, with tokens in row order. */
+export const attentionMap = (
+  outputs: Outputs,
+  lineWidth: number,
+): AttentionMap => {
+  const data = float32Output(outputs, 'attention');
+  const [, heads, characters, tokens] = outputs.attention.dims;
+  const size = characters * tokens;
+  const weights = new Float32Array(size);
+  for (let head = 0; head < heads; head++) {
+    for (let index = 0; index < size; index++) {
+      weights[index] += data[head * size + index] / heads;
+    }
+  }
+  return {
+    characters,
+    rows: TOKEN_ROWS,
+    columns: tokens / TOKEN_ROWS,
+    validColumns: roundUp(lineWidth, WIDTH_STEP) / TOKEN_WIDTH,
+    weights,
+  };
+};
+
+export const characterStyles = (
+  readings: readonly CharacterReading[],
+): readonly CharacterStyle[] =>
+  readings.map(({ strike, underline }) => ({
+    strike: strike >= THRESHOLD,
+    underline: underline >= THRESHOLD,
+  }));
 
 export const styledRuns = (
   characters: readonly string[],
