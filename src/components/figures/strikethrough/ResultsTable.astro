@@ -1,0 +1,88 @@
+---
+type Result = { metric: string; previous: string; shipped: string };
+
+const RESULTS: Result[] = [
+  {
+    metric: 'Lines with every letter/number exactly right (4,334)',
+    previous: '96.68%',
+    shipped: '97.07%',
+  },
+  {
+    metric: 'Words with every letter/number exactly right (2,795)',
+    previous: '98.53%',
+    shipped: '98.93%',
+  },
+  {
+    metric: 'Strike F1, lines (non-space)',
+    previous: '99.61%',
+    shipped: '99.66%',
+  },
+  {
+    metric: 'Underline F1, lines (non-space)',
+    previous: '99.65%',
+    shipped: '99.68%',
+  },
+  {
+    metric: 'Warm CPU, ms/line, 2 threads (M4 Pro)',
+    previous: '2.99',
+    shipped: '3.01',
+  },
+];
+---
+
+<figure class="results-table">
+  <span class="scope">V6.4 dev, paired, int8</span>
+  <table>
+    <thead>
+      <tr>
+        <th scope="col">Metric</th>
+        <th scope="col" class="num">Previous int8 backbone</th>
+        <th scope="col" class="num">Shipped int8</th>
+      </tr>
+    </thead>
+    <tbody>
+      {
+        RESULTS.map(({ metric, previous, shipped }) => (
+          <tr>
+            <th scope="row">{metric}</th>
+            <td class="num">{previous}</td>
+            <td class="num">{shipped}</td>
+          </tr>
+        ))
+      }
+    </tbody>
+  </table>
+  <figcaption><slot /></figcaption>
+</figure>
+
+<style>
+  .scope {
+    font-size: 13.5px;
+    font-style: italic;
+    color: var(--note);
+  }
+
+  tbody th {
+    font-weight: 400;
+  }
+
+  .num {
+    text-align: right;
+    vertical-align: bottom;
+    white-space: nowrap;
+  }
+
+  thead .num {
+    white-space: normal;
+  }
+
+  tbody td {
+    vertical-align: top;
+  }
+
+  @media (max-width: 480px) {
+    table {
+      font-size: 14.5px;
+    }
+  }
+</style>

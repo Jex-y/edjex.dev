@@ -1,0 +1,332 @@
+---
+import { appear, keyframes } from '../../../lib/motion';
+import {
+  QUERY_TEXT,
+  QUERY_WORDS,
+  growFrames,
+  illustrativeHeight,
+  markColor,
+  placeWords,
+} from './sample';
+import './figure.css';
+
+const CROP_X = 70;
+const CHAR_WIDTH = 24;
+const COLUMN_WIDTH = 8;
+const COLUMNS = (QUERY_TEXT.length * CHAR_WIDTH) / COLUMN_WIDTH;
+const ROW_HEIGHT = 14;
+const MATRIX_TOP = 110;
+const SCAN_Y = 24;
+const SCAN_H = 60;
+const BASELINE = SCAN_Y + 42;
+const STRIKE_BAR_X = 572;
+const UNDERLINE_BAR_X = 604;
+const BAR_WIDTH = 26;
+const ROWS_FROM = 6;
+const ROW_STEP = 3.8;
+
+const words = placeWords(QUERY_WORDS, CROP_X, CHAR_WIDTH);
+const rowStart = (row: number) => ROWS_FROM + Math.round(row * ROW_STEP);
+
+const wordAt = (char: number) =>
+  words.findLast((word) => word.firstChar <= char) ?? words[0];
+
+const rows = [...QUERY_TEXT].map((char, row) => {
+  const word = wordAt(row);
+  const inWord = row < word.firstChar + word.text.length;
+  const focus = (row + 0.5) * (CHAR_WIDTH / COLUMN_WIDTH);
+  const left = (word.x - CROP_X) / COLUMN_WIDTH;
+  const right = left + word.width / COLUMN_WIDTH;
+  const cells = Array.from({ length: COLUMNS }, (_, column) => {
+    const centre = column + 0.5;
+    const within = centre >= left - 1 && centre <= right + 1;
+    const bump = Math.exp(-(((centre - focus) / 3) ** 2));
+    const weight = within ? 0.34 + 0.5 * bump : 0;
+    return { column, weight: inWord ? weight : weight * 0.45 };
+  }).filter(({ weight }) => weight > 0);
+  return {
+    char,
+    row,
+    word,
+    start: rowStart(row),
+    y: MATRIX_TOP + row * ROW_HEIGHT,
+    cells,
+    strike:
+      char === ' '
+        ? 0.04
+        : illustrativeHeight(inWord && word.mark === 'strike', row),
+    underline:
+      char === ' '
+        ? 0.04
+        : illustrativeHeight(inWord && word.mark === 'underline', row),
+  };
+});
+
+const BAND_PAD = 4;
+const rowTransform = (row: number) =>
+  `translateY(${MATRIX_TOP + row * ROW_HEIGHT}px)`;
+const REST_WORD = words[2];
+const REST_ROW = REST_WORD.firstChar;
+
+const OUTPUT_START = rows.at(-1)!.start + 5;
+const lastRowStart = rows.at(-1)!.start;
+const bandFrames = (index: number) => {
+  const word = words[index];
+  const start = rowStart(word.firstChar);
+  const next = words[index + 1];
+  const from = index === 0 ? 0 : words[index - 1].x - word.x;
+  const hide = next ? rowStart(next.firstChar) : lastRowStart + 4;
+  return `0%, ${Math.max(start - 2, 0)}% { opacity: 0; transform: translateX(${from}px) } ${start}%, ${hide - 1}% { opacity: 1; transform: none } ${hide + 1}%, 100% { opacity: 0; transform: none }`;
+};
+const rowFrames = rows
+  .map(
+    ({ row, start }) =>
+      `${start}% { transform: ${rowTransform(row)}; opacity: 1 }`,
+  )
+  .join(' ');
+
+const MOTION_CSS = [
+  keyframes(
+    'mcq-in',
+    [2, OUTPUT_START, ...rows.map(({ start }) => start)],
+    appear,
+  ),
+  keyframes(
+    'mcq-bar',
+    rows.map(({ start }) => start + 1),
+    growFrames('X', 3),
+  ),
+  ...words.map(
+    (_, index) => `@keyframes mcq-band-${index} { ${bandFrames(index)} }`,
+  ),
+  `@keyframes mcq-row { 0% { transform: ${rowTransform(0)}; opacity: 0 } ${rowFrames} ${lastRowStart + 4}%, 100% { transform: ${rowTransform(rows.length - 1)}; opacity: 0 } }`,
+].join('\n');
+
+const inAt = (start: number) => ({
+  class: 'st-anim',
+  style: `animation-name: mcq-in-${start}`,
+});
+
+const OUTPUT_ADVANCE = 10.8;
+const OUTPUT_Y = MATRIX_TOP + rows.length * ROW_HEIGHT + 34;
+const outputWords = placeWords(QUERY_WORDS, CROP_X, OUTPUT_ADVANCE);
+---
+
+<figure
+  class="full wide-figure motion st-figure motion-character-queries"
+  style="--st-loop: 14s"
+>
+  <svg
+    viewBox="0 0 640 436"
+    width="100%"
+    role="img"
+    aria-label="An illustrative line crop sits above a matrix with one row per character of the text. Row by row, an attention band holds over each word in turn, tracing a word-level staircase, and two bars for strike and underline fill in beside each character"
+  >
+    <defs>
+      <filter id="mcq-ink" x="-2%" y="-20%" width="104%" height="140%">
+        <feTurbulence
+          type="fractalNoise"
+          baseFrequency="0.5"
+          numOctaves="2"
+          seed="9"></feTurbulence>
+        <feDisplacementMap in="SourceGraphic" scale="2"></feDisplacementMap>
+      </filter>
+      <clipPath id="mcq-paper">
+        <rect x={CROP_X - 12} y={SCAN_Y} width={504} height={SCAN_H}></rect>
+      </clipPath>
+    </defs>
+
+    <text
+      x={CROP_X - 12}
+      y="16"
+      font-size="14"
+      font-style="italic"
+      fill="var(--note)">crop</text
+    >
+    <g {...inAt(2)}>
+      <rect
+        x={CROP_X - 12}
+        y={SCAN_Y}
+        width="504"
+        height={SCAN_H}
+        fill="var(--st-scan-paper)"></rect>
+      <g clip-path="url(#mcq-paper)">
+        <g filter="url(#mcq-ink)" fill="var(--st-scan-ink)" font-size="37">
+          {
+            words.map((word) => (
+              <text
+                x={word.x}
+                y={BASELINE}
+                textLength={word.width}
+                lengthAdjust="spacingAndGlyphs"
+              >
+                {word.text}
+              </text>
+            ))
+          }
+          {
+            words
+              .filter((word) => word.mark !== 'plain')
+              .map((word) => {
+                const y = word.mark === 'strike' ? BASELINE - 11 : BASELINE + 8;
+                return (
+                  <line
+                    x1={word.x - 2}
+                    x2={word.x + word.width + 2}
+                    y1={y}
+                    y2={y}
+                    stroke="var(--st-scan-ink)"
+                    stroke-width="2.5"
+                  />
+                );
+              })
+          }
+        </g>
+      </g>
+    </g>
+    {
+      words.map((word, index) => (
+        <rect
+          class:list={[
+            'st-anim st-anim-linear',
+            word !== REST_WORD && 'st-motion-only',
+          ]}
+          style={`animation-name: mcq-band-${index}`}
+          x={word.x - BAND_PAD}
+          y={SCAN_Y}
+          width={word.width + 2 * BAND_PAD}
+          height={SCAN_H}
+          fill="var(--st-scan-ink)"
+          fill-opacity="0.2"
+        />
+      ))
+    }
+
+    <g font-size="14" fill="var(--note)" font-style="italic">
+      <text x="14" y={MATRIX_TOP - 8}>query</text>
+      <text x={CROP_X} y={MATRIX_TOP - 8}
+        >attention over image memory columns</text
+      >
+    </g>
+    <g class="st-mono" font-size="13" font-weight="600">
+      <text x={STRIKE_BAR_X} y={MATRIX_TOP - 8} fill="var(--st-strike)"
+        >&lt;s&gt;</text
+      >
+      <text x={UNDERLINE_BAR_X} y={MATRIX_TOP - 8} fill="var(--st-underline)"
+        >&lt;u&gt;</text
+      >
+    </g>
+
+    <rect
+      class="st-anim st-anim-step"
+      style={`animation-name: mcq-row; transform: ${rowTransform(REST_ROW)}`}
+      x="10"
+      y="0"
+      width="622"
+      height={ROW_HEIGHT}
+      fill="var(--tool-light)"
+      fill-opacity="0.55"></rect>
+
+    <rect
+      x={CROP_X}
+      y={MATRIX_TOP}
+      width={COLUMNS * COLUMN_WIDTH}
+      height={rows.length * ROW_HEIGHT}
+      fill="none"
+      stroke="var(--tool-light)"></rect>
+
+    {
+      rows.map(({ char, y, start, cells, strike, underline }) => (
+        <>
+          <g {...inAt(start)}>
+            {cells.map(({ column, weight }) => (
+              <rect
+                x={CROP_X + column * COLUMN_WIDTH}
+                y={y + 1}
+                width={COLUMN_WIDTH}
+                height={ROW_HEIGHT - 2}
+                fill="var(--ink)"
+                fill-opacity={weight.toFixed(2)}
+              />
+            ))}
+          </g>
+          <text
+            class="st-mono"
+            x="44"
+            y={y + 11}
+            font-size="13"
+            text-anchor="middle"
+            fill="var(--ink)"
+          >
+            {char === ' ' ? '␣' : char}
+          </text>
+          <rect
+            class="st-anim st-grow-x"
+            style={`animation-name: mcq-bar-${start + 1}`}
+            x={STRIKE_BAR_X}
+            y={y + 3}
+            width={strike * BAR_WIDTH}
+            height={ROW_HEIGHT - 6}
+            fill="var(--st-strike)"
+          />
+          <rect
+            class="st-anim st-grow-x"
+            style={`animation-name: mcq-bar-${start + 1}`}
+            x={UNDERLINE_BAR_X}
+            y={y + 3}
+            width={underline * BAR_WIDTH}
+            height={ROW_HEIGHT - 6}
+            fill="var(--st-underline)"
+          />
+        </>
+      ))
+    }
+
+    <g {...inAt(OUTPUT_START)}>
+      <text
+        x="14"
+        y={OUTPUT_Y}
+        font-size="14"
+        font-style="italic"
+        fill="var(--note)">output</text
+      >
+      <g class="st-mono" font-size="18" fill="var(--ink)">
+        {
+          outputWords.map((word) => (
+            <>
+              <text
+                x={word.x}
+                y={OUTPUT_Y}
+                textLength={word.width}
+                lengthAdjust="spacingAndGlyphs"
+              >
+                {word.text}
+              </text>
+              {word.mark !== 'plain' && (
+                <line
+                  x1={word.x - 1}
+                  x2={word.x + word.width + 1}
+                  y1={word.mark === 'strike' ? OUTPUT_Y - 5.5 : OUTPUT_Y + 5}
+                  y2={word.mark === 'strike' ? OUTPUT_Y - 5.5 : OUTPUT_Y + 5}
+                  stroke={markColor(word.mark)}
+                  stroke-width="2"
+                />
+              )}
+            </>
+          ))
+        }
+      </g>
+    </g>
+  </svg>
+  <figcaption><slot /></figcaption>
+</figure>
+
+<Fragment set:html={`<style>${MOTION_CSS}</style>`} />
+
+<script>
+  import { playWhenVisible } from '../../../scripts/motion';
+
+  document
+    .querySelectorAll('.motion-character-queries')
+    .forEach(playWhenVisible);
+</script>
