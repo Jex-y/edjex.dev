@@ -1,0 +1,90 @@
+---
+title: cnn-strikethrough-detection
+description: Placeholder for a post on detecting strikethrough text with a CNN.
+pubDate: 2026-11-01
+draft: true
+heroImage: ./cnn-strikethrough-detection-assets/card-fig02.png
+---
+
+import LiveStrikethrough from "../../components/figures/LiveStrikethrough.astro";
+
+
+## The problem
+
+Modern OCR providers often do not provide text style annotations. For the vast
+majority of documents, this is fine, the meaning is preserved. For legal
+documents, underline and strikethrough annotations are used to denote amendments
+to a document, so are key to an LLM understanding it. Even worse, OCR providers
+often drop stricken words.
+
+{/* Example of document amendments */}
+
+At Solve, our existing solution required the agent to view the pdf using image
+tokens. This approach has a few key disadvantages:
+
+{/* Get some numbers here */}
+
+- **Context management**: For a page of text, viewing it as an image costs
+  roughly numberX more tokens than the text representation.
+- **Accuracy**: Surprisingly, modern language models struggle with this task,
+  perhaps just due to a lack of training on it.
+- **Grepability**: Over a large corpus of documents, searching for specific
+  amendments is much more difficult, as it requires viewing each document in
+  turn.
+
+These drawbacks forced us to only support `.DOCX` uploads for various features
+that rely amendments, which can be frustrating to users as the vast majority of
+the platform supports PDF uploads.
+
+## Tiny Model for Strike through and underline
+
+Motivated by the above, I challenged myself to come up with a model that could
+detect strikethrough and underline on OCR'ed documents. The solution had a few
+key requirements:
+
+- **Accuracy**: $>98\%$ was the target.
+- **Inference cost**: Must be able to run on our existing document ingestion
+pipeline workers, without significantly slowing down the pipeline. 
+
+This fits exactly the requirements of the tiny models I am most interested in
+building (see my [masters project](/blog/final-year-project/), so I was immediately [nerd sniped](https://xkcd.com/356/).
+
+This is the solution we landed on. Small enough to run in your browser, accurate
+enough to be used in production, trained on a MacBook.
+
+<LiveStrikethrough />
+
+The inputs to the model are:
+
+1. An grayscale image of size $W /times 64$.
+2. Extracted OCR text for line, possibly incorrect. UTF-8 codepoints.
+
+## Development
+
+I was first introduced the solution space of this problem when Robin implemented a classical computer vision pipeline to detect
+lines through text. This validated that the idea was possible, and gave him a
+great intuition for the problem.
+
+My first attempt was a simple CNN classifier that operated on the image only,
+classifying each vertical slice, providing further validation that this could be
+solved with a small model, however there was no way to map the extracted styles
+back on to the OCR text.
+
+### Agentic development 
+
+Increasing software is being written in such a way that the code itself does not
+matter, only its contract with the outside world, performance, and correctness.
+This kind of model development is an excellent example of a problem that
+benefits from this well as it has very clear success metrics.
+
+So, I posed the issue to Claude Opus 5.5 and left it. The solution it came up
+with was one of the more interesting model architectures I have ever seen.
+
+{/* Architecture diagram. */}
+
+
+
+
+
+
+

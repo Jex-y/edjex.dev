@@ -1,0 +1,630 @@
+---
+import { appear, keyframes } from '../../../lib/motion';
+import StageTrack from './StageTrack.astro';
+import {
+  QUERY_TEXT,
+  QUERY_WORDS,
+  growFrames,
+  illustrativeHeight,
+  placeWords,
+} from './sample';
+import './figure.css';
+
+type Stage = {
+  name: string;
+  shape: string;
+  x: number;
+  width: number;
+  height: number;
+  depth: number;
+  start: number;
+};
+type Block = {
+  name: string;
+  detail: string;
+  x: number;
+  fill: string;
+  start: number;
+};
+type Waypoint = readonly [percent: number, x: number, y: number];
+type Pulse = { id: string; route: readonly Waypoint[] };
+
+const ROW_Y = 78;
+const SLAB_DX = 5;
+const SLAB_DY = 4;
+const CROP = { x: 8, y: ROW_Y - 32, width: 192, height: 64 };
+
+const STAGES: Stage[] = [
+  {
+    name: 'stage 1',
+    shape: '[16, 32, W/2]',
+    x: 210,
+    width: 96,
+    height: 32,
+    depth: 2,
+    start: 8,
+  },
+  {
+    name: 'stage 2',
+    shape: '[24, 16, W/4]',
+    x: 326,
+    width: 48,
+    height: 16,
+    depth: 3,
+    start: 14,
+  },
+  {
+    name: 'stage 3',
+    shape: '[40, 8, W/4]',
+    x: 434,
+    width: 48,
+    height: 8,
+    depth: 4,
+    start: 20,
+  },
+  {
+    name: 'stage 4',
+    shape: '[64, 4, W/4]',
+    x: 534,
+    width: 48,
+    height: 4,
+    depth: 5,
+    start: 26,
+  },
+];
+
+const MEMORY = { x: 8, y: 178, cellW: 12, cellH: 6, columns: 51, rows: 4 };
+const MEMORY_START = 32;
+const memoryBottom = MEMORY.y + MEMORY.rows * MEMORY.cellH;
+const memoryCells = Array.from(
+  { length: MEMORY.columns * MEMORY.rows },
+  (_, k) => ({
+    x: MEMORY.x + (k % MEMORY.columns) * MEMORY.cellW,
+    y: MEMORY.y + Math.floor(k / MEMORY.columns) * MEMORY.cellH,
+    tone: 0.12 + ((k * 13) % 7) * 0.07,
+  }),
+);
+
+const FUSION_Y = 242;
+const HEADS = 4;
+const HEAD_W = 56;
+const HEAD_H = 44;
+const HEAD_DX = 6;
+const HEAD_DY = 5;
+const BLOCKS: Block[] = [
+  {
+    name: 'cross-attention 1',
+    detail: '4 heads × 16 dims',
+    x: 30,
+    fill: 'url(#ma-image)',
+    start: 50,
+  },
+  {
+    name: 'self-attention',
+    detail: '4 heads × 16 dims',
+    x: 164,
+    fill: 'url(#ma-text)',
+    start: 58,
+  },
+  {
+    name: 'cross-attention 2',
+    detail: '4 heads × 16 dims',
+    x: 294,
+    fill: 'url(#ma-image)',
+    start: 64,
+  },
+];
+const fusionMid = FUSION_Y + 30;
+const blockRight = (block: Block) => block.x + HEAD_W + (HEADS - 1) * HEAD_DX;
+const HEAD_BLOCK = { x: 428, width: 44, start: 70 };
+
+const QUERY = { x: 8, y: 382, cellW: 31, height: 24, start: 44 };
+const QUERY_CHARS = [...QUERY_TEXT];
+const queryEnd = QUERY.x + QUERY_CHARS.length * QUERY.cellW;
+
+const CHIPS = [
+  { label: 'UTF-8 bytes', x: 8, width: 130, start: 38 },
+  { label: 'codepoint hash', x: 148, width: 148, start: 39 },
+  { label: 'index', x: 306, width: 96, start: 40 },
+  { label: 'relative r, Fourier(r)', x: 412, width: 216, start: 41 },
+];
+const CHIP_Y = 424;
+const CHIP_H = 24;
+
+const OUTPUT = { x: 524, strikeY: 244, underlineY: 276, height: 26, step: 5.4 };
+const words = placeWords(QUERY_WORDS, 0, 1);
+const outputBars = QUERY_CHARS.map((char, k) => {
+  const word = words.findLast((w) => w.firstChar <= k) ?? words[0];
+  const inWord = char !== ' ';
+  return {
+    x: OUTPUT.x + k * OUTPUT.step,
+    strike: illustrativeHeight(inWord && word.mark === 'strike', k),
+    underline: illustrativeHeight(inWord && word.mark === 'underline', k),
+    start: 76 + Math.round((k / QUERY_CHARS.length) * 8),
+  };
+});
+
+const PULSES: Pulse[] = [
+  {
+    id: 'cnn',
+    route: [
+      [3, CROP.x + CROP.width, ROW_Y],
+      [8, 210, ROW_Y],
+      [14, 326, ROW_Y],
+      [20, 434, ROW_Y],
+      [26, 534, ROW_Y],
+      [28, 634, ROW_Y],
+      [32, 634, MEMORY.y + 12],
+    ],
+  },
+  {
+    id: 'kv1',
+    route: [
+      [44, 67, memoryBottom],
+      [50, 67, FUSION_Y],
+    ],
+  },
+  {
+    id: 'kv2',
+    route: [
+      [58, 331, memoryBottom],
+      [64, 331, FUSION_Y],
+    ],
+  },
+  {
+    id: 'q',
+    route: [
+      [44, 12, QUERY.y],
+      [48, 12, fusionMid],
+      [50, 30, fusionMid],
+    ],
+  },
+  {
+    id: 'fusion',
+    route: [
+      [52, blockRight(BLOCKS[0]), fusionMid],
+      [58, BLOCKS[1].x, fusionMid],
+      [60, blockRight(BLOCKS[1]), fusionMid],
+      [64, BLOCKS[2].x, fusionMid],
+      [66, blockRight(BLOCKS[2]), fusionMid],
+      [70, HEAD_BLOCK.x, fusionMid],
+      [72, HEAD_BLOCK.x + HEAD_BLOCK.width, fusionMid],
+      [76, OUTPUT.x, fusionMid],
+    ],
+  },
+];
+
+const pulseFrames = ({ id, route }: Pulse) => {
+  const [firstPercent, firstX, firstY] = route[0];
+  const [lastPercent, lastX, lastY] = route[route.length - 1];
+  const at = (x: number, y: number) => `transform: translate(${x}px, ${y}px)`;
+  const steps = route
+    .map(([percent, x, y]) => `${percent}% { ${at(x, y)}; opacity: 1 }`)
+    .join(' ');
+  return `@keyframes ma-pulse-${id} { 0%, ${firstPercent - 0.5}% { ${at(firstX, firstY)}; opacity: 0 } ${steps} ${lastPercent + 0.5}%, 100% { ${at(lastX, lastY)}; opacity: 0 } }`;
+};
+
+const slideIn = (start: number) =>
+  `0%, ${start}% { opacity: 0; transform: translateX(-14px) } ${start + 3}%, 92% { opacity: 1; transform: none } 97%, 100% { opacity: 0; transform: none }`;
+
+const MOTION_CSS = [
+  keyframes(
+    'ma-in',
+    [
+      2,
+      MEMORY_START,
+      QUERY.start,
+      ...CHIPS.map(({ start }) => start),
+      HEAD_BLOCK.start,
+    ],
+    appear,
+  ),
+  keyframes(
+    'ma-slide',
+    [...STAGES, ...BLOCKS].map(({ start }) => start),
+    slideIn,
+  ),
+  keyframes(
+    'ma-bar',
+    outputBars.map(({ start }) => start),
+    growFrames('Y', 3),
+  ),
+  ...PULSES.map(pulseFrames),
+].join('\n');
+
+const inAt = (start: number) => ({
+  class: 'st-anim',
+  style: `animation-name: ma-in-${start}`,
+});
+const slideAt = (start: number) => ({
+  class: 'st-anim',
+  style: `animation-name: ma-slide-${start}`,
+});
+const barAt = (start: number) => ({
+  class: 'st-anim st-grow-y',
+  style: `animation-name: ma-bar-${start}`,
+});
+
+const TRACK = [
+  { label: 'crop', start: 0 },
+  { label: 'CNN', start: 8 },
+  { label: 'memory', start: 32 },
+  { label: 'queries', start: 44 },
+  { label: 'fusion', start: 58 },
+  { label: 'marks', start: 78 },
+];
+---
+
+<figure
+  class="full wide-figure motion st-figure motion-architecture"
+  style="--st-loop: 12s"
+>
+  <svg
+    viewBox="0 0 640 508"
+    width="100%"
+    role="img"
+    aria-label="The shipped model: a crop of shape 1 by 64 by W passes through four convolutional stages into an image memory. Character inputs form queries. The queries pass through cross-attention, self-attention and cross-attention, with both cross-attention blocks reading keys and values from the image memory, and end in two probabilities per codepoint, strike and underline"
+  >
+    <defs>
+      <pattern
+        id="ma-image"
+        width="6"
+        height="6"
+        patternUnits="userSpaceOnUse"
+        patternTransform="rotate(45)"
+      >
+        <rect width="6" height="6" fill="var(--placeholder)"></rect>
+        <rect width="2" height="6" fill="var(--tool)"></rect>
+      </pattern>
+      <pattern
+        id="ma-text"
+        width="6"
+        height="6"
+        patternUnits="userSpaceOnUse"
+        patternTransform="rotate(-45)"
+      >
+        <rect width="6" height="6" fill="#f3eefb"></rect>
+        <rect width="3" height="6" fill="#9b7bd6"></rect>
+      </pattern>
+      <filter id="ma-ink" x="-2%" y="-20%" width="104%" height="140%">
+        <feTurbulence
+          type="fractalNoise"
+          baseFrequency="0.9"
+          numOctaves="2"
+          seed="2"></feTurbulence>
+        <feDisplacementMap in="SourceGraphic" scale="0.8"></feDisplacementMap>
+      </filter>
+      <marker
+        id="ma-arrow"
+        markerWidth="7"
+        markerHeight="7"
+        refX="6"
+        refY="3.5"
+        orient="auto"
+      >
+        <path d="M 0 0.5 L 6 3.5 L 0 6.5 Z" fill="var(--ink)"></path>
+      </marker>
+      <clipPath id="ma-paper">
+        <rect x={CROP.x} y={CROP.y} width={CROP.width} height={CROP.height}
+        ></rect>
+      </clipPath>
+    </defs>
+
+    <g fill="none" stroke="var(--ink)" stroke-width="1">
+      <path
+        d={`M 200 ${ROW_Y} H 634 V ${MEMORY.y + 12} H 622`}
+        marker-end="url(#ma-arrow)"></path>
+      <path d={`M 67 ${memoryBottom} V ${FUSION_Y}`} marker-end="url(#ma-arrow)"
+      ></path>
+      <path
+        d={`M 331 ${memoryBottom} V ${FUSION_Y}`}
+        marker-end="url(#ma-arrow)"></path>
+      <path
+        d={`M 12 ${QUERY.y} V ${fusionMid} H 30`}
+        marker-end="url(#ma-arrow)"></path>
+      {
+        [
+          [blockRight(BLOCKS[0]), BLOCKS[1].x],
+          [blockRight(BLOCKS[1]), BLOCKS[2].x],
+          [blockRight(BLOCKS[2]), HEAD_BLOCK.x],
+          [HEAD_BLOCK.x + HEAD_BLOCK.width, OUTPUT.x - 4],
+        ].map(([from, to]) => (
+          <path
+            d={`M ${from} ${fusionMid} H ${to}`}
+            marker-end="url(#ma-arrow)"
+          />
+        ))
+      }
+      {
+        CHIPS.map(({ x, width }) => (
+          <path
+            d={`M ${x + width / 2} ${CHIP_Y} V ${QUERY.y + QUERY.height + 1}`}
+            marker-end="url(#ma-arrow)"
+          />
+        ))
+      }
+    </g>
+
+    <g {...inAt(2)}>
+      <rect
+        x={CROP.x}
+        y={CROP.y}
+        width={CROP.width}
+        height={CROP.height}
+        fill="var(--st-scan-paper)"></rect>
+      <g clip-path="url(#ma-paper)">
+        <g filter="url(#ma-ink)" fill="var(--st-scan-ink)" font-size="17">
+          <text x={CROP.x + 10} y={ROW_Y + 4}>{QUERY_TEXT}</text>
+          <text x={CROP.x + 10} y={CROP.y + CROP.height + 6} opacity="0.8"
+            >a bore and a seat formed</text
+          >
+          <text x={CROP.x + 10} y={CROP.y + 6} opacity="0.8"
+            >1. An assembly comprising:</text
+          >
+        </g>
+      </g>
+      <rect
+        x={CROP.x + 0.5}
+        y={CROP.y + 0.5}
+        width={CROP.width - 1}
+        height={CROP.height - 1}
+        fill="none"
+        stroke="var(--ink)"></rect>
+    </g>
+
+    {
+      STAGES.map(({ x, width, height, depth, start }) => (
+        <g {...slideAt(start)}>
+          {Array.from({ length: depth }, (_, k) => (
+            <rect
+              x={x + k * SLAB_DX + 0.5}
+              y={ROW_Y - height / 2 + (k - (depth - 1) / 2) * SLAB_DY + 0.5}
+              width={width}
+              height={height}
+              fill="url(#ma-image)"
+              stroke="var(--ink)"
+            />
+          ))}
+        </g>
+      ))
+    }
+
+    <circle
+      class="st-anim st-anim-linear st-motion-only"
+      style="animation-name: ma-pulse-cnn"
+      r="4"
+      fill="var(--ink)"></circle>
+
+    <g font-size="14" fill="var(--note)">
+      <text x={STAGES[0].x} y="24" font-style="italic" fill="var(--ink)"
+        >ConvNeXt-style CNN</text
+      >
+      <text x="632" y="24" text-anchor="end">conv ops int8</text>
+      <line
+        x1={STAGES[0].x}
+        x2="632"
+        y1="31.5"
+        y2="31.5"
+        stroke="var(--tool-light)"></line>
+      <text x={CROP.x} y="24" font-style="italic">crop</text>
+      <text x={CROP.x + 36} y="24">[1, 64, W]</text>
+      {
+        STAGES.map(({ name, shape, x }) => (
+          <>
+            <text x={x} y="130" font-style="italic">
+              {name}
+            </text>
+            <text x={x} y="148">
+              {shape}
+            </text>
+          </>
+        ))
+      }
+      <text x={MEMORY.x} y={MEMORY.y - 8} font-style="italic" fill="var(--ink)"
+        >image memory</text
+      >
+      <text x={MEMORY.x + 104} y={MEMORY.y - 8}>[N, 64], N = 4 × W/4</text>
+    </g>
+
+    <g {...inAt(MEMORY_START)}>
+      {
+        memoryCells.map(({ x, y, tone }) => (
+          <rect
+            x={x}
+            y={y}
+            width={MEMORY.cellW - 1}
+            height={MEMORY.cellH - 1}
+            fill="var(--ink)"
+            fill-opacity={tone.toFixed(2)}
+          />
+        ))
+      }
+    </g>
+
+    <g font-size="14" fill="var(--note)" class="st-mono">
+      <text x="76" y={FUSION_Y - 14}>K, V</text>
+      <text x="340" y={FUSION_Y - 14}>K, V</text>
+      <text x="18" y={fusionMid + 20}>Q</text>
+    </g>
+
+    {
+      BLOCKS.map(({ x, fill, start }) => (
+        <g {...slideAt(start)}>
+          {Array.from({ length: HEADS }, (_, k) => (
+            <rect
+              x={x + k * HEAD_DX + 0.5}
+              y={FUSION_Y + k * HEAD_DY + 0.5}
+              width={HEAD_W}
+              height={HEAD_H}
+              fill={fill}
+              stroke="var(--ink)"
+            />
+          ))}
+        </g>
+      ))
+    }
+    <rect
+      {...inAt(HEAD_BLOCK.start)}
+      x={HEAD_BLOCK.x + 0.5}
+      y={FUSION_Y + 8.5}
+      width={HEAD_BLOCK.width}
+      height="44"
+      fill="var(--paper)"
+      stroke="var(--ink)"></rect>
+    <text
+      {...inAt(HEAD_BLOCK.start)}
+      x={HEAD_BLOCK.x + HEAD_BLOCK.width / 2}
+      y={fusionMid + 5}
+      text-anchor="middle"
+      font-size="14"
+      fill="var(--ink)">2</text
+    >
+
+    <line
+      x1={OUTPUT.x}
+      x2={OUTPUT.x + QUERY_CHARS.length * OUTPUT.step}
+      y1={OUTPUT.strikeY + OUTPUT.height + 0.5}
+      y2={OUTPUT.strikeY + OUTPUT.height + 0.5}
+      stroke="var(--tool-light)"></line>
+    <line
+      x1={OUTPUT.x}
+      x2={OUTPUT.x + QUERY_CHARS.length * OUTPUT.step}
+      y1={OUTPUT.underlineY + OUTPUT.height + 0.5}
+      y2={OUTPUT.underlineY + OUTPUT.height + 0.5}
+      stroke="var(--tool-light)"></line>
+    {
+      outputBars.map(({ x, strike, underline, start }) => (
+        <>
+          <rect
+            {...barAt(start)}
+            x={x}
+            y={OUTPUT.strikeY + OUTPUT.height - strike * OUTPUT.height}
+            width={OUTPUT.step - 1.2}
+            height={strike * OUTPUT.height}
+            fill="var(--st-strike)"
+          />
+          <rect
+            {...barAt(start)}
+            x={x}
+            y={OUTPUT.underlineY + OUTPUT.height - underline * OUTPUT.height}
+            width={OUTPUT.step - 1.2}
+            height={underline * OUTPUT.height}
+            fill="var(--st-underline)"
+          />
+        </>
+      ))
+    }
+
+    <g font-size="14" fill="var(--note)">
+      {
+        BLOCKS.map(({ name, detail, x }) => (
+          <>
+            <text x={x} y={FUSION_Y + 82} font-style="italic" fill="var(--ink)">
+              {name}
+            </text>
+            <text x={x} y={FUSION_Y + 100}>
+              {detail}
+            </text>
+          </>
+        ))
+      }
+      <text
+        x={HEAD_BLOCK.x - 6}
+        y={FUSION_Y + 82}
+        font-style="italic"
+        fill="var(--ink)">Linear(64, 2)</text
+      >
+      <text x={HEAD_BLOCK.x - 6} y={FUSION_Y + 100}>sigmoid</text>
+      <text x={OUTPUT.x + 2} y={FUSION_Y + 82} fill="var(--st-strike)"
+        >P(strike)</text
+      >
+      <text x={OUTPUT.x + 2} y={FUSION_Y + 100} fill="var(--st-underline)"
+        >P(underline)</text
+      >
+    </g>
+
+    <g font-size="14" fill="var(--note)">
+      <text x="30" y={QUERY.y - 8} font-style="italic" fill="var(--ink)"
+        >character queries</text
+      >
+      <text x="146" y={QUERY.y - 8}>[C, 64], C ≤ 160</text>
+    </g>
+    <g {...inAt(QUERY.start)}>
+      <rect
+        x={QUERY.x + 0.5}
+        y={QUERY.y + 0.5}
+        width={queryEnd - QUERY.x}
+        height={QUERY.height}
+        fill="url(#ma-text)"
+        stroke="var(--ink)"></rect>
+      {
+        QUERY_CHARS.map((char, k) => (
+          <>
+            <rect
+              x={QUERY.x + k * QUERY.cellW + 7}
+              y={QUERY.y + 4}
+              width={QUERY.cellW - 14}
+              height={QUERY.height - 7}
+              fill="#ffffff"
+            />
+            <text
+              class="st-mono"
+              x={QUERY.x + k * QUERY.cellW + QUERY.cellW / 2}
+              y={QUERY.y + 17}
+              text-anchor="middle"
+              font-size="14"
+              fill="#000000"
+            >
+              {char === ' ' ? '␣' : char}
+            </text>
+          </>
+        ))
+      }
+    </g>
+    {
+      CHIPS.map(({ label, x, width, start }) => (
+        <g {...inAt(start)}>
+          <rect
+            x={x + 0.5}
+            y={CHIP_Y + 0.5}
+            width={width - 1}
+            height={CHIP_H - 1}
+            fill="var(--paper)"
+            stroke="var(--ink)"
+          />
+          <text
+            x={x + width / 2}
+            y={CHIP_Y + 17}
+            text-anchor="middle"
+            font-size="14"
+            fill="var(--ink)"
+          >
+            {label}
+          </text>
+        </g>
+      ))
+    }
+
+    {
+      PULSES.slice(1).map(({ id }) => (
+        <circle
+          class="st-anim st-anim-linear st-motion-only"
+          style={`animation-name: ma-pulse-${id}`}
+          r="4"
+          fill="var(--ink)"
+        />
+      ))
+    }
+
+    <StageTrack x1={8} x2={632} y={464} stages={TRACK} />
+  </svg>
+  <figcaption><slot /></figcaption>
+</figure>
+
+<Fragment set:html={`<style>${MOTION_CSS}</style>`} />
+
+<script>
+  import { playWhenVisible } from '../../../scripts/motion';
+
+  document.querySelectorAll('.motion-architecture').forEach(playWhenVisible);
+</script>

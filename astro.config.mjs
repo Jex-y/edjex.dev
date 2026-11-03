@@ -5,6 +5,8 @@ import { remarkReadingTime } from './plugins/remark-reading-time.js';
 import { remarkModifiedTime } from './plugins/remark-modified-time.js';
 import rehypeFigure from '@microflash/rehype-figure';
 import rehypeSlug from 'rehype-slug';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
 
 import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
@@ -44,11 +46,12 @@ export default defineConfig({
                 remarkPlugins: [
                         remarkReadingTime,
                         remarkModifiedTime,
-
+                        remarkMath,
                 ],
                 rehypePlugins: [
                         rehypeSlug,
                         rehypeFigure,
+                        rehypeKatex,
                 ]
         },
 

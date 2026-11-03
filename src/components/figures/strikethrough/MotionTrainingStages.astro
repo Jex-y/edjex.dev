@@ -1,0 +1,371 @@
+---
+import { appear, keyframes } from '../../../lib/motion';
+import { growFrames } from './sample';
+import './figure.css';
+
+type Segment = {
+  steps: number;
+  x: number;
+  width: number;
+  start: number;
+  duration: number;
+};
+
+const SCALE = 0.021;
+const AXIS_X = 12;
+const BAR_Y = 62;
+const BAR_H = 34;
+const STEP_PERCENT = 0.002;
+
+const SYNTHETIC_STEPS = [2000, 6000, 4000, 8000];
+const synthetic = SYNTHETIC_STEPS.reduce<readonly Segment[]>(
+  (segments, steps) => {
+    const last = segments.at(-1);
+    return [
+      ...segments,
+      {
+        steps,
+        x: last ? last.x + last.width : AXIS_X,
+        width: steps * SCALE,
+        start: last ? last.start + last.duration : 4,
+        duration: Math.round(steps * STEP_PERCENT),
+      },
+    ];
+  },
+  [],
+);
+
+const syntheticEnd = synthetic.at(-1)!;
+const FINE_TUNE_STEPS = 1800;
+const FINE_TUNE = {
+  x: syntheticEnd.x + syntheticEnd.width + 8,
+  width: FINE_TUNE_STEPS * SCALE,
+  start: syntheticEnd.start + syntheticEnd.duration + 1,
+  duration: 6,
+};
+const ADAPT = {
+  x: FINE_TUNE.x + FINE_TUNE.width + 8,
+  width: 628 - (FINE_TUNE.x + FINE_TUNE.width + 8),
+  start: FINE_TUNE.start + FINE_TUNE.duration + 2,
+  duration: 12,
+};
+
+const DIAGRAM_Y = 170;
+const DIAGRAM_H = 54;
+const FROZEN_SLABS = [
+  { label: 'CNN', x: 40, width: 120 },
+  { label: 'cross-attention 1', x: 176, width: 118 },
+  { label: 'cross-attention 2', x: 428, width: 118 },
+];
+const NEW_BLOCK = { x: 322, width: 80 };
+const FREEZE_START = ADAPT.start;
+const BLOCK_START = ADAPT.start + 3;
+const TENSOR_FROM = ADAPT.start + 5;
+const TENSORS = Array.from({ length: 12 }, (_, k) => ({
+  x: NEW_BLOCK.x + 4 + (k % 6) * 12.2,
+  y: DIAGRAM_Y + 8 + Math.floor(k / 6) * 20,
+  start: TENSOR_FROM + k,
+}));
+
+const COUNT_FROM = TENSOR_FROM + TENSORS.length;
+const COUNT_END = COUNT_FROM + 8;
+const COUNT_STEP = 44;
+const BASELINE_PCT = 96.68;
+const SHIPPED_PCT = 97.07;
+const COUNT = Array.from(
+  { length: Math.round((SHIPPED_PCT - BASELINE_PCT) * 100) + 1 },
+  (_, k) => `${(BASELINE_PCT + k / 100).toFixed(2)}%`,
+);
+const COUNT_LAST = (COUNT.length - 1) * COUNT_STEP;
+
+const MOTION_CSS = [
+  keyframes(
+    'mts-in',
+    [
+      FINE_TUNE.start + FINE_TUNE.duration,
+      FREEZE_START,
+      BLOCK_START,
+      COUNT_FROM,
+      ...synthetic.map(({ start, duration }) => start + duration),
+      ...TENSORS.map(({ start }) => start),
+    ],
+    appear,
+  ),
+  ...synthetic.map(({ start, duration }) =>
+    keyframes('mts-grow', [start], growFrames('X', duration)),
+  ),
+  keyframes('mts-grow', [FINE_TUNE.start], growFrames('X', FINE_TUNE.duration)),
+  keyframes('mts-grow', [ADAPT.start], growFrames('X', ADAPT.duration)),
+  `@keyframes mts-count {
+    0%, ${COUNT_FROM - 1}% { transform: translateY(0); opacity: 0 }
+    ${COUNT_FROM}% { transform: translateY(0); opacity: 1; animation-timing-function: steps(${COUNT.length - 1}, end) }
+    ${COUNT_END}% { transform: translateY(-${COUNT_LAST}px); opacity: 1 }
+    92% { transform: translateY(-${COUNT_LAST}px); opacity: 1 }
+    97%, 100% { transform: translateY(-${COUNT_LAST}px); opacity: 0 }
+  }`,
+  `@keyframes mts-fall {
+    0%, ${BLOCK_START}% { transform: translateY(-34px); opacity: 0 }
+    ${BLOCK_START + 3}%, 92% { transform: none; opacity: 1 }
+    97%, 100% { transform: none; opacity: 0 }
+  }`,
+].join('\n');
+
+const inAt = (start: number) => ({
+  class: 'st-anim',
+  style: `animation-name: mts-in-${start}`,
+});
+const growAt = (start: number) => ({
+  class: 'st-anim st-anim-linear st-grow-x',
+  style: `animation-name: mts-grow-${start}`,
+});
+
+const COUNTER_Y = 340;
+const formatSteps = (steps: number) => steps.toLocaleString('en-GB');
+---
+
+<figure
+  class="full wide-figure motion st-figure motion-training-stages"
+  style="--st-loop: 14s"
+>
+  <svg
+    viewBox="0 0 640 372"
+    width="100%"
+    role="img"
+    aria-label="Training timeline: synthetic pretraining in stages of 2,000, 6,000, 4,000 and 8,000 steps, then a real fine-tune selected at step 1,800, then context adaptation with the backbone frozen and one identity-initialised block adding 12 new tensors. Line exactness goes from 96.68% on the previous int8 backbone to 97.07% on the shipped int8 model"
+  >
+    <defs>
+      <pattern
+        id="mts-frozen"
+        width="6"
+        height="6"
+        patternUnits="userSpaceOnUse"
+        patternTransform="rotate(45)"
+      >
+        <rect width="6" height="6" fill="var(--placeholder)"></rect>
+        <rect width="2" height="6" fill="var(--tool)"></rect>
+      </pattern>
+      <pattern
+        id="mts-new"
+        width="6"
+        height="6"
+        patternUnits="userSpaceOnUse"
+        patternTransform="rotate(-45)"
+      >
+        <rect width="6" height="6" fill="#f3eefb"></rect>
+        <rect width="3" height="6" fill="#9b7bd6"></rect>
+      </pattern>
+      <clipPath id="mts-window">
+        <rect x="372" y={COUNTER_Y - 40} width="256" height={COUNT_STEP + 4}
+        ></rect>
+      </clipPath>
+    </defs>
+
+    <g font-size="14">
+      <text x={AXIS_X} y="24" font-style="italic" fill="var(--ink)"
+        >synthetic pretraining</text
+      >
+      <text
+        x={syntheticEnd.x + syntheticEnd.width}
+        y="24"
+        text-anchor="end"
+        fill="var(--note)">steps</text
+      >
+      <text x={FINE_TUNE.x} y="24" font-style="italic" fill="var(--ink)"
+        >real</text
+      >
+      <text x={FINE_TUNE.x} y="42" font-style="italic" fill="var(--ink)"
+        >fine-tune</text
+      >
+      <text x={ADAPT.x + 24} y="24" font-style="italic" fill="var(--ink)"
+        >context</text
+      >
+      <text x={ADAPT.x + 24} y="42" font-style="italic" fill="var(--ink)"
+        >adaptation</text
+      >
+    </g>
+
+    {
+      synthetic.map(({ x, width, start }) => (
+        <rect
+          {...growAt(start)}
+          x={x + 0.5}
+          y={BAR_Y + 0.5}
+          width={width - 1}
+          height={BAR_H}
+          fill="var(--placeholder)"
+          stroke="var(--ink)"
+        />
+      ))
+    }
+    <g font-size="14" fill="var(--ink)" text-anchor="middle">
+      {
+        synthetic.map(({ steps, x, width, start, duration }) => (
+          <text {...inAt(start + duration)} x={x + width / 2} y={BAR_Y + 23}>
+            {formatSteps(steps)}
+          </text>
+        ))
+      }
+    </g>
+    <rect
+      {...growAt(FINE_TUNE.start)}
+      x={FINE_TUNE.x + 0.5}
+      y={BAR_Y + 0.5}
+      width={FINE_TUNE.width - 1}
+      height={BAR_H}
+      fill="var(--tool-light)"
+      stroke="var(--ink)"></rect>
+    <g {...inAt(FINE_TUNE.start + FINE_TUNE.duration)}>
+      <path
+        d={`M ${FINE_TUNE.x + FINE_TUNE.width - 0.5} ${BAR_Y + BAR_H} V ${BAR_Y + BAR_H + 10}`}
+        stroke="var(--ink)"
+        fill="none"></path>
+      <text
+        x={FINE_TUNE.x + FINE_TUNE.width}
+        y={BAR_Y + BAR_H + 26}
+        text-anchor="middle"
+        font-size="14"
+        fill="var(--note)">selected at step 1,800</text
+      >
+    </g>
+    <rect
+      {...growAt(ADAPT.start)}
+      x={ADAPT.x + 0.5}
+      y={BAR_Y + 0.5}
+      width={ADAPT.width - 1}
+      height={BAR_H}
+      fill="url(#mts-new)"
+      stroke="var(--ink)"></rect>
+
+    <g fill="none" stroke="var(--ink)">
+      <path d={`M 12 ${DIAGRAM_Y + DIAGRAM_H / 2} H 40`}></path>
+      <path d={`M 160 ${DIAGRAM_Y + DIAGRAM_H / 2} H 176`}></path>
+      <path d={`M 294 ${DIAGRAM_Y + DIAGRAM_H / 2} H 428`}></path>
+      <path d={`M 546 ${DIAGRAM_Y + DIAGRAM_H / 2} H 600`}></path>
+    </g>
+    {
+      FROZEN_SLABS.map(({ x, width }) => (
+        <>
+          <rect
+            x={x + 0.5}
+            y={DIAGRAM_Y + 0.5}
+            width={width}
+            height={DIAGRAM_H}
+            fill="var(--paper)"
+            stroke="var(--ink)"
+          />
+          <rect
+            {...inAt(FREEZE_START)}
+            x={x + 0.5}
+            y={DIAGRAM_Y + 0.5}
+            width={width}
+            height={DIAGRAM_H}
+            fill="url(#mts-frozen)"
+            stroke="var(--ink)"
+          />
+        </>
+      ))
+    }
+    <g font-size="14" fill="var(--note)">
+      {
+        FROZEN_SLABS.map(({ label, x }) => (
+          <text x={x} y={DIAGRAM_Y + DIAGRAM_H + 20}>
+            {label}
+          </text>
+        ))
+      }
+    </g>
+    <g class="st-anim" style="animation-name: mts-fall">
+      <rect
+        x={NEW_BLOCK.x + 0.5}
+        y={DIAGRAM_Y + 0.5}
+        width={NEW_BLOCK.width}
+        height={DIAGRAM_H}
+        fill="var(--paper)"
+        stroke="var(--ink)"
+        stroke-width="1.5"></rect>
+    </g>
+    {
+      TENSORS.map(({ x, y, start }) => (
+        <rect
+          {...inAt(start)}
+          x={x}
+          y={y}
+          width="9.5"
+          height="16"
+          fill="url(#mts-new)"
+          stroke="var(--ink)"
+          stroke-width="0.75"
+        />
+      ))
+    }
+    <g {...inAt(BLOCK_START)} font-size="14" text-anchor="middle">
+      <text
+        x={NEW_BLOCK.x + NEW_BLOCK.width / 2}
+        y={DIAGRAM_Y - 10}
+        fill="var(--ink)"
+        font-style="italic">identity-initialised block</text
+      >
+      <text
+        x={NEW_BLOCK.x + NEW_BLOCK.width / 2}
+        y={DIAGRAM_Y + DIAGRAM_H + 20}
+        fill="var(--note)">12 new tensors</text
+      >
+    </g>
+    <g font-size="14">
+      <g {...inAt(FREEZE_START)}>
+        <text x="40" y={DIAGRAM_Y - 10} font-style="italic" fill="var(--note)"
+          >backbone frozen</text
+        >
+      </g>
+    </g>
+
+    <line
+      x1="12"
+      x2="628"
+      y1={COUNTER_Y - 56.5}
+      y2={COUNTER_Y - 56.5}
+      stroke="var(--tool-light)"></line>
+    <g {...inAt(COUNT_FROM)} font-size="14" fill="var(--note)">
+      <text x="12" y={COUNTER_Y - 36} font-style="italic">line exactness</text>
+      <text x="170" y={COUNTER_Y - 36}>previous int8 backbone</text>
+      <text x="372" y={COUNTER_Y - 36}>shipped int8</text>
+    </g>
+    <g {...inAt(COUNT_FROM)}>
+      <text x="170" y={COUNTER_Y} font-size="36" fill="var(--note)">96.68%</text
+      >
+      <path
+        d={`M 322 ${COUNTER_Y - 12} H 356 M 350 ${COUNTER_Y - 17} L 356 ${COUNTER_Y - 12} L 350 ${COUNTER_Y - 7}`}
+        fill="none"
+        stroke="var(--ink)"></path>
+    </g>
+    <g clip-path="url(#mts-window)">
+      <g
+        class="st-anim"
+        style={`animation-name: mts-count; transform: translateY(-${COUNT_LAST}px)`}
+      >
+        {
+          COUNT.map((value, k) => (
+            <text
+              x="372"
+              y={COUNTER_Y + k * COUNT_STEP}
+              font-size="36"
+              font-weight="500"
+              fill="var(--ink)"
+            >
+              {value}
+            </text>
+          ))
+        }
+      </g>
+    </g>
+  </svg>
+  <figcaption><slot /></figcaption>
+</figure>
+
+<Fragment set:html={`<style>${MOTION_CSS}</style>`} />
+
+<script>
+  import { playWhenVisible } from '../../../scripts/motion';
+
+  document.querySelectorAll('.motion-training-stages').forEach(playWhenVisible);
+</script>

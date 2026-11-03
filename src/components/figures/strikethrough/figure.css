@@ -1,0 +1,74 @@
+.st-figure {
+  --st-strike: #c0533a;
+  --st-underline: var(--water);
+  --st-scan-paper: #f5f3ec;
+  --st-scan-ink: #1e1e1e;
+}
+
+.st-figure svg {
+  display: block;
+  max-width: 680px;
+}
+
+.st-mono {
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+}
+
+.st-figure * {
+  animation-play-state: paused;
+}
+
+.st-figure.playing * {
+  animation-play-state: running;
+}
+
+.st-anim {
+  animation-duration: var(--st-loop);
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-out;
+}
+
+.st-anim-linear {
+  animation-timing-function: linear;
+}
+
+.st-anim-step {
+  animation-timing-function: step-end;
+}
+
+.st-grow-x {
+  transform-box: fill-box;
+  transform-origin: left center;
+}
+
+.st-grow-y {
+  transform-box: fill-box;
+  transform-origin: center bottom;
+}
+
+.st-motion-only {
+  opacity: 0;
+}
+
+.st-head {
+  animation-name: st-head;
+  animation-duration: var(--st-loop);
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+}
+
+@keyframes st-head {
+  to {
+    transform: translateX(var(--st-travel));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .st-figure * {
+    animation: none !important;
+  }
+
+  .st-head {
+    display: none;
+  }
+}

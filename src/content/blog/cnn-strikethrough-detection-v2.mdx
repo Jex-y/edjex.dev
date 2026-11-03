@@ -1,0 +1,335 @@
+---
+title: Reading strikethrough one character at a time
+description: A 227,746 parameter model that labels every OCR character as struck, underlined, both or neither. Small enough to run in your browser.
+pubDate: 2026-11-01
+draft: true
+heroImage: ./cnn-strikethrough-detection-assets/card-fig02.png
+---
+
+import { Image } from 'astro:assets';
+import LiveStrikethrough from "../../components/figures/LiveStrikethrough.astro";
+import MotionArchitecture from "../../components/figures/strikethrough/MotionArchitecture.astro";
+import MotionCharacterQueries from "../../components/figures/strikethrough/MotionCharacterQueries.astro";
+import MotionOcrLoss from "../../components/figures/strikethrough/MotionOcrLoss.astro";
+import ResultsTable from "../../components/figures/strikethrough/ResultsTable.astro";
+import realLine from "./cnn-strikethrough-detection-assets/card-fig02.png";
+import renumberedLine from "./cnn-strikethrough-detection-assets/card-fig09.png";
+
+## The problem
+
+Here is a line from a real patent amendment:
+
+<figure>
+  <Image src={realLine} alt="A scanned line reading 'Amended) The An assay test', with 'The' underlined and 'An' struck through" width={600} />
+  <figcaption>The applicant deleted "An" and inserted "The".</figcaption>
+</figure>
+
+Here is what OCR gives you for it:
+
+```text
+Amended) The An assay test
+```
+
+Modern OCR providers often do not provide text style annotations. For the vast
+majority of documents, this is fine. The meaning is preserved. For patent
+amendments, it isn't. Underline marks inserted text and strikethrough marks
+deleted text, so they are key to an LLM understanding the document. Without
+them, "The An assay test" is just a typo. Even worse, OCR providers often drop
+stricken words altogether.
+
+<MotionOcrLoss />
+
+At Solve, our existing solution required the agent to view the pdf using image
+tokens. This approach has a few key disadvantages:
+
+- **Context management**: A page rendered at 200 DPI costs roughly 4,800 tokens
+  as an image. The same page as text is closer to 750, so viewing it costs about
+  six times more.
+- **Accuracy**: Surprisingly, modern language models struggle with this task,
+  perhaps just due to a lack of training on it.
+- **Grepability**: Over a large corpus of documents, searching for specific
+  amendments is much more difficult, as it requires viewing each document in
+  turn.
+
+These drawbacks forced us to only support `.DOCX` uploads for various features
+that rely on amendments, which can be frustrating to users as the vast majority
+of the platform supports PDF uploads.
+
+## A tiny model for strikethrough and underline
+
+Motivated by the above, I challenged myself to come up with a model that could
+detect strikethrough and underline on OCR'ed documents. The solution had a few
+key requirements:
+
+- **Accuracy**: $>98\%$ of words exactly right was the target.
+- **Inference cost**: Must be able to run on our existing document ingestion
+  pipeline workers, without significantly slowing down the pipeline.
+
+This fits exactly the requirements of the tiny models I am most interested in
+building (see my [master's project](/blog/final-year-project/)), so I was
+immediately [nerd sniped](https://xkcd.com/356/).
+
+This is the solution we landed on. 227,746 parameters and 834 KB. Small enough
+to run in your browser, accurate enough to be used in production, trained on a
+MacBook.
+
+<LiveStrikethrough />
+
+The inputs to the model are:
+
+1. A grayscale image of size $W \times 64$, cropped around one OCR text box.
+2. The OCR text for that box, up to 160 codepoints, which the model assumes is
+   correct. Each codepoint $c$ becomes its four UTF-8 bytes and a hash into 2,047
+   buckets:
+
+$$
+h(c) = 1 + (c \cdot 2654435761) \bmod 2047
+$$
+
+The output is two independent probabilities per codepoint, strikethrough and
+underline, each thresholded at $0.5$:
+
+$$
+p \in [0, 1]^{C \times 2}
+$$
+
+## Development
+
+I was first introduced to the solution space of this problem when Robin
+implemented a classical computer vision pipeline to detect lines through text.
+This validated that the idea was possible, and gave him a great intuition for
+the problem.
+
+My first attempt was a simple CNN classifier that operated on the image only,
+classifying each vertical slice, providing further validation that this could be
+solved with a small model. However, there was no way to map the extracted styles
+back on to the OCR text.
+
+### Agentic development
+
+Increasingly, software is being written in such a way that the code itself does
+not matter, only its contract with the outside world, performance, and
+correctness. This kind of model development is an excellent example of a problem
+that benefits from this, as it has very clear success metrics.
+
+So, I posed the issue to Claude Opus 5.5 and left it. The solution it came up
+with was one of the more interesting model architectures I have ever seen. The
+image goes through a tiny ConvNeXt into a shared memory, and then every character
+in the OCR text asks that memory a question: where is my ink, and is there a line
+through it?
+
+<MotionArchitecture />
+
+<MotionCharacterQueries>Illustrative, not real attention weights.</MotionCharacterQueries>
+
+That mapping problem from my first attempt just disappears. Characters don't need
+aligning to columns, because each one finds its own.
+
+## Model history
+
+Leaving it is not the whole story. It took thirteen generations to get here, most
+of them in about ten days.
+
+<div class="table-scroll">
+
+| Model | When | The idea | Size | What happened |
+| --- | --- | --- | ---: | --- |
+| Classical (Robin) | before 9 Oct | OCR word boxes, then OpenCV morphology | none | 0.670 on EPO. Kept as the baseline |
+| StrikeNet | before 9 Oct | U-Net on page pixels, then strokes to words by geometry | not recorded | Dropped. No reason recorded |
+| LineNet | before 9 Oct | One vector per 4 px column, then CTC to align the known text | 217k | 0.824 on EPO. Became the previous release |
+| Tagger v1–v4 | 9 Oct | Text cross-attends to columns, no alignment step | 645k | Deleted strike F1 0.636, against 0.866 for the aligner |
+| Tagger v5, v6a | 9–10 Oct | Adds real USPTO data | not recorded | Pointer decode 0.66, CTC 0.87. Alignment came back |
+| Span reader | 10 Oct | Reads struck text directly | 962k | CER 0.024 on struck runs, against 0.31 |
+| Ensemble of 4 | 10–11 Oct | One change per member, then average the logits | 16 MB | Members tied at 0.880–0.882. Too big, became the teacher |
+| `fast` | 10–11 Oct | Distilled student, int8 | 614k, 4.1 MB | 0.876 on EPO, 188 ms p95 per page |
+| Tagger v10 | 11 Oct | Wider and deeper, distilled | 1.41M, 8.1 MB | 0.895 on EPO, 415 ms p95 per page |
+| Tagger v11 | 16 Oct | Larger alphabet, German and French text | not recorded | No significant gain |
+| Tagger v12 | 16–17 Oct | Synthetic EPO digit edits, prior art negatives | not recorded | 459/529 digit tokens, against 417 for v10 |
+| Claim-set decoder | 16–18 Oct | Viterbi over a document's claim numbers | not a network | The last thing in the research repo |
+| Retained hybrid (Robin) | merged 21 Oct | Assume the text is correct, predict two bits per character | 227,746, 834 KB | 97.07% of lines. This is the one that shipped |
+
+</div>
+
+Don't compare numbers between rows too closely. The metrics, datasets and labels
+changed along the way, and that table has a few different metrics in it.
+
+### Starting from morphology
+
+Robin's classical pipeline was the proof that this could work at all. It also showed
+why it needed learning. Morphology cannot tell what a horizontal run is for: table
+rules, chemical bonds and fraction bars all look like a strike.
+
+### Trying to delete the aligner
+
+LineNet worked, but it needed CTC forced alignment to get from columns back to the
+OCR text, and alignment has no good answer when the text and the ink disagree. So I
+tried to get rid of it. Each character would find its own ink, using cross-attention
+and pointers.
+
+That is the idea that eventually shipped, but it did not work the first time.
+Pointer decoding scored 0.66 on marked lines, against 0.87 for CTC on the same
+network. So alignment came back, and the release of the model built to remove
+alignment decoded its styles with alignment.
+
+### Too ambitious
+
+The other thing I wanted was to recover the struck text that OCR had dropped, with a
+gap head and a separate reader. The reader was great. Finding the gaps was not. On
+simulated deletions, it located 85% of dropped runs. On genuine OCR drops, it located
+10–50%, on just 42 and 8 runs. They are rare, so there is very little to learn from.
+
+The gains also weren't where I expected. On clean USPTO scans, v10 barely moved
+against the previous release: 0.886 against 0.889. The real gain was on EPO, 0.824
+to 0.895. Meanwhile one of the biggest jumps in false positives came from changing no
+architecture at all: hard negatives, a rule filter and a new operating point took
+LineNet from 2.10 false words per 10 pages to 0.26.
+
+None of this line was ever merged.
+
+### Narrowing the problem
+
+Robin's version asked a smaller question. Assume the text is correct, and predict
+only strikethrough and underline for each codepoint. No CTC, no text recovery, no
+distillation, no postprocessing. When the text looks wrong, the AI is told to look
+at the PDF.
+
+Dropping CTC was not a free win. On my tagger, turning the aligner off with the same
+weights lost 5.5 to 19 points on the dev sets. It took a different task and a
+different model to make it work.
+
+That is the model above. It was pretrained on 20,000 steps of synthetic lines in
+seven languages, fine-tuned on real crops, selected at step 1,800, and then
+adapted with the backbone frozen. One identity-initialized attention block went in,
+12 tensors changed, and exactness rose by about 0.39 percentage points at almost
+the same latency.
+
+Not everything helped. A later run regressed and was rejected, as was a later
+synthetic generator. One of the biggest limits was not the model at all: whole
+styled lines had been labelled plain in the gold data.
+
+### The trouble with 4s
+
+EPO amendments are the hardest thing this model sees, because claims get renumbered
+one digit at a time:
+
+<figure>
+  <Image src={renumberedLine} alt="A scanned EPO claim line reading 814. The apparatus of any of claims 58 to 713, with single digits underlined and struck through" />
+</figure>
+
+Within that, the digit 4 is its own problem, because its crossbar sits right where a
+strike would go. To measure this, I rendered plain digits between struck neighbours,
+with the strike drawn at crossbar height. The model called a plain 4 struck 18 times
+out of 60. It did that 0 times out of 60 for each of 1, 7 and 8. And the illusion
+comes from the neighbouring ink: blank out both neighbours, and the mean probability
+of strike on the 4 falls from 0.326 to 0.001.
+
+It goes wrong the other way too, and on real documents this is the bigger problem. In
+digit runs with both struck and unstruck digits, all of them from EPO, the model
+misses 8 of 12 struck 4s, against 41 of 160 for other digits. It misses 8 of 9 struck
+4s where neither neighbour is struck, so the context is pointing the wrong way.
+
+The attention is bidirectional. The self-attention block between the two
+cross-attention blocks is unmasked, so each character can see both its left and its
+right. That sounds like the fix for a 4 between struck neighbours, but I can't show
+that it is. Without the block, the model already got all 34 of those right, and a
+plain 4 between struck neighbours never appears in the dev set. Across 399 scored 4s,
+adding the block fixed none and broke one. Limiting it to one side moved at most 3 of
+them.
+
+What the block does help is everything around them. It fixed 21 errors and broke 5 on
+other digits, though that holds with the attention update zeroed, so I can't credit
+the attention itself. The attention does help underline: 17 lines fixed and 5 broken,
+against the block with attention zeroed. Direction matters there too. Losing the right
+side costs 30 lines and gains back 5, mostly on underline, while losing the left has no
+detectable cost.
+
+So 4s remain partly unsolved. With only about a dozen errors to work with, these
+numbers can't rule out a small effect either way.
+
+## Results
+
+<ResultsTable />
+
+3 ms per line, on two CPU threads. These numbers come with a caveat: we inspected
+the dev set repeatedly and used it for selection, and there is no untouched test
+split. They also aren't comparable with the 0.895 above, because the task, crops
+and datasets are all different.
+
+## Taking it apart
+
+Thirteen generations leaves you with a lot of parts and no idea which ones earned
+their place. So I took the model apart and retrained it, removing one thing at a
+time: 76 runs, about six hours on CPU.
+
+Retraining is the important word. My first attempt just switched parts off in the
+trained model, and that massively overstates things, because the remaining parts
+have learned to depend on them. Switching off image position cost 94 percentage
+points. Removing it and letting the model adapt cost 3.7. The second cross-attention
+block's attention went from 22.7 points to 0.2.
+
+The noise is the other thing to get right. I included a placebo that changed one
+training character out of the whole set, and it moved accuracy by 0.17 points and
+passed the significance tests. So I ignore anything under about a quarter of a point,
+whatever the p-value says. Training the whole thing from scratch three times gave
+96.22%, 96.68% and 97.14%, so one seed can't tell you much.
+
+<div class="table-scroll">
+
+| Removed | Lines exactly right, points | What it was doing | Seeds |
+| --- | ---: | --- | ---: |
+| Line-view training | -11.78 | Everything on lines | 3 |
+| Relative position | at most -5.56 | Underline, digits, mixed digit runs | 3 |
+| Image position | at most -3.73 | Underline, digits, EPO | 3 |
+| Character index | at most -2.53 | Digits | 3 |
+| Balanced sampling | -1.96 | Digits, mixed digit runs | 3 |
+| Half the CNN width | -1.43 | General, but 41% faster | 1 |
+| Human review of training labels | -1.28 | Mostly underline | 3 |
+| Synthetic pretraining | -1.13 | EPO underline | 1 |
+| Byte embeddings | at most -0.96 | Struck digits | 3 |
+| Context self-attention | -0.37 to -0.53 | Mostly EPO | 3–5 |
+| Second cross-attention block | -0.23, not detected | | 1 |
+| Hash embedding | at most -0.18, not detected | | 3 |
+| Weight decay | +0.07, not detected | | 3 |
+
+</div>
+
+The "at most" rows are inputs I removed from an already pretrained model before fine
+tuning it, which is why they are limits and not measurements. The biggest ones also
+reset some weights, so their order isn't reliable.
+
+The biggest surprise for me is that the top result has nothing to do with the network.
+Training on whole lines is worth more than any input. Without it, line accuracy falls
+to 85%. And it works both ways: training only on lines might gain 0.45 points on
+lines, but loses 7.97 on words. Each view mostly serves itself.
+
+Position is the most useful thing the model gets, especially for digits. Errors in
+mixed digit runs nearly triple without relative position. Human
+review of the training labels is also worth a real 1.28 points, although half of that
+loss comes from one document.
+
+That leaves the 4s, and they don't get any easier. None of the things I removed turned
+out to be specifically about 4s: everything that hurt them also hurt other digits.
+Retraining with causal self-attention, so each character can only see to its left,
+cost 0.19 points overall, not enough to be sure of, and changed the error rate on 4s
+by exactly nothing. That is a smaller cost than the masks above suggested, which is
+the same lesson again.
+
+The hash embedding and the second cross-attention block are about 14% of the
+parameters each, and neither loss could be detected. They might be removable. I
+wouldn't remove them yet, because the second block had only one seed, and nobody has
+tried removing both.
+
+One result is bigger than all of these. On ten documents held out of training, lines
+exactly right fell to 84–88%, against about 97% on the dev set. I can't yet tell
+whether those documents are harder or their labels are noisier. But it does make me
+think that the next point is more likely to come from data than from architecture.
+
+## Running it
+
+In production, it runs on CPU with ONNX Runtime, in one worker process per parent:
+two threads, batches of 8, and at most two pages rendered at 200 DPI. Inference
+failures never fail OCR.
+
+In your browser, it also runs on CPU. It does run on WebGPU, but it returns
+different numbers, so I stopped trusting it. The runtime is 14.8 MB, which is about
+18 times the size of the model.

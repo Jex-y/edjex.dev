@@ -1,0 +1,382 @@
+---
+import { appear, keyframes } from '../../../lib/motion';
+import StageTrack from './StageTrack.astro';
+import {
+  AMENDED_LINE,
+  NEIGHBOUR_LINE,
+  growFrames,
+  illustrativeHeight,
+  markColor,
+  placeWords,
+} from './sample';
+import './figure.css';
+
+type Token = {
+  text: string;
+  x: number;
+  width: number;
+  color: string;
+  mark: 'plain' | 'strike' | 'underline' | 'tag';
+  start: number;
+};
+
+const X0 = 24;
+const ADVANCE = 11.38;
+const LINE_CHARS = AMENDED_LINE.reduce((n, w) => n + w.text.length + 1, -1);
+const OCR_FROM = 8;
+const OCR_SPAN = 20;
+const MARKS_FROM = 34;
+const MARKS_SPAN = 16;
+const OUTPUT_FROM = 56;
+const OUTPUT_SPAN = 14;
+
+const placed = placeWords(AMENDED_LINE, X0, ADVANCE);
+const ocrStart = (firstChar: number) =>
+  OCR_FROM + Math.round((firstChar / LINE_CHARS) * OCR_SPAN);
+
+const garbled = placed.flatMap((word) =>
+  [...word.ocr].flatMap((char, k) =>
+    char === word.text[k]
+      ? []
+      : [
+          {
+            x: word.x + k * ADVANCE,
+            start: ocrStart(word.firstChar),
+          },
+        ],
+  ),
+);
+
+const bars = placed.flatMap((word) =>
+  [...word.text].map((_, k) => {
+    const index = word.firstChar + k;
+    return {
+      x: word.x + k * ADVANCE + 1.5,
+      strike: illustrativeHeight(word.mark === 'strike', index),
+      underline: illustrativeHeight(word.mark === 'underline', index),
+      start: MARKS_FROM + Math.round((index / LINE_CHARS) * MARKS_SPAN),
+    };
+  }),
+);
+
+const OUTPUT_ADVANCE = 10.8;
+const OUTPUT_LINES = [placed.slice(0, 4), placed.slice(4)];
+const outputLines = OUTPUT_LINES.map((words, line) => {
+  const tokens = words.reduce<readonly Token[]>((out, word, w) => {
+    const cursor = out.at(-1);
+    const left = cursor ? cursor.x + cursor.width + OUTPUT_ADVANCE : X0;
+    const start =
+      OUTPUT_FROM +
+      Math.round(
+        ((line * words.length + w) / (OUTPUT_LINES[0].length + words.length)) *
+          OUTPUT_SPAN,
+      );
+    if (word.mark === 'plain') {
+      return [
+        ...out,
+        {
+          text: word.ocr,
+          x: left,
+          width: word.ocr.length * OUTPUT_ADVANCE,
+          color: 'var(--ink)',
+          mark: 'plain',
+          start,
+        },
+      ];
+    }
+    const tag = word.mark === 'strike' ? 's' : 'u';
+    const color = markColor(word.mark);
+    const inner = left + 3 * OUTPUT_ADVANCE;
+    const close = inner + word.ocr.length * OUTPUT_ADVANCE;
+    return [
+      ...out,
+      {
+        text: `<${tag}>`,
+        x: left,
+        width: 3 * OUTPUT_ADVANCE,
+        color,
+        mark: 'tag',
+        start,
+      },
+      {
+        text: word.ocr,
+        x: inner,
+        width: word.ocr.length * OUTPUT_ADVANCE,
+        color: 'var(--ink)',
+        mark: word.mark,
+        start,
+      },
+      {
+        text: `</${tag}>`,
+        x: close,
+        width: 4 * OUTPUT_ADVANCE,
+        color,
+        mark: 'tag',
+        start,
+      },
+    ];
+  }, []);
+  return tokens;
+});
+
+const allStarts = [
+  1,
+  ...placed.map((word) => ocrStart(word.firstChar)),
+  ...outputLines.flat().map((token) => token.start),
+];
+const barStarts = bars.map((bar) => bar.start);
+const MOTION_CSS = [
+  keyframes('mol-in', allStarts, appear),
+  keyframes('mol-bar', barStarts, growFrames('Y', 3)),
+  `@keyframes mol-beam {
+    0%, ${OCR_FROM}% { transform: translateX(${X0}px); opacity: 0 }
+    ${OCR_FROM + 1}% { opacity: 0.32 }
+    ${OCR_FROM + OCR_SPAN - 1}% { opacity: 0.32 }
+    ${OCR_FROM + OCR_SPAN}%, 100% { transform: translateX(${X0 + 592}px); opacity: 0 }
+  }`,
+].join('\n');
+
+const inAt = (start: number) => ({
+  class: 'st-anim',
+  style: `animation-name: mol-in-${start}`,
+});
+const barAt = (start: number) => ({
+  class: 'st-anim st-grow-y',
+  style: `animation-name: mol-bar-${start}`,
+});
+
+const SCAN_Y = 26;
+const SCAN_H = 60;
+const BASELINE = SCAN_Y + 38;
+const OCR_Y = 144;
+const STRIKE_ROW = { top: 188, height: 22 };
+const UNDERLINE_ROW = { top: 214, height: 22 };
+const OUTPUT_Y = [292, 320];
+
+const STAGES = [
+  { label: 'scan', start: 0 },
+  { label: 'OCR', start: OCR_FROM },
+  { label: 'model', start: MARKS_FROM },
+  { label: '<s> / <u>', start: OUTPUT_FROM },
+];
+---
+
+<figure
+  class="full wide-figure motion st-figure motion-ocr-loss"
+  style="--st-loop: 12s"
+>
+  <svg
+    viewBox="0 0 640 372"
+    width="100%"
+    role="img"
+    aria-label="An illustrative scanned claim line with two struck and two underlined words passes through OCR, which returns flat text and garbles the struck words; per-character marks then return the same garbled text wrapped in s and u tags"
+  >
+    <defs>
+      <filter id="mol-ink" x="-2%" y="-20%" width="104%" height="140%">
+        <feTurbulence
+          type="fractalNoise"
+          baseFrequency="0.7"
+          numOctaves="2"
+          seed="4"></feTurbulence>
+        <feDisplacementMap in="SourceGraphic" scale="1.3"></feDisplacementMap>
+      </filter>
+      <clipPath id="mol-paper">
+        <rect x="12" y={SCAN_Y} width="616" height={SCAN_H}></rect>
+      </clipPath>
+    </defs>
+
+    <text x="12" y="18" font-size="14" font-style="italic" fill="var(--note)"
+      >scan</text
+    >
+    <g {...inAt(1)}>
+      <rect
+        x="12"
+        y={SCAN_Y}
+        width="616"
+        height={SCAN_H}
+        fill="var(--st-scan-paper)"></rect>
+      <g clip-path="url(#mol-paper)">
+        <g filter="url(#mol-ink)" fill="var(--st-scan-ink)" font-size="21">
+          {
+            placed.map((word) => (
+              <text
+                x={word.x}
+                y={BASELINE}
+                textLength={word.width}
+                lengthAdjust="spacingAndGlyphs"
+              >
+                {word.text}
+              </text>
+            ))
+          }
+          <text x={X0} y={BASELINE + 34}>{NEIGHBOUR_LINE}</text>
+          {
+            placed
+              .filter((word) => word.mark !== 'plain')
+              .map((word) => {
+                const y = word.mark === 'strike' ? BASELINE - 6 : BASELINE + 5;
+                return (
+                  <line
+                    x1={word.x - 1}
+                    x2={word.x + word.width + 1}
+                    y1={y}
+                    y2={y}
+                    stroke="var(--st-scan-ink)"
+                    stroke-width="1.5"
+                  />
+                );
+              })
+          }
+        </g>
+      </g>
+    </g>
+    <rect
+      class="st-anim st-anim-linear st-motion-only"
+      style="animation-name: mol-beam"
+      x="-8"
+      y={SCAN_Y}
+      width="16"
+      height={SCAN_H}
+      fill="var(--st-scan-ink)"></rect>
+
+    <text x="12" y="116" font-size="14" font-style="italic" fill="var(--note)"
+      >OCR text</text
+    >
+    <g class="st-mono" font-size="19">
+      {
+        garbled.map(({ x, start }) => (
+          <rect
+            {...inAt(start)}
+            x={x - 0.5}
+            y={OCR_Y - 16}
+            width={ADVANCE + 1}
+            height="22"
+            fill="var(--tool-light)"
+          />
+        ))
+      }
+      {
+        placed.map((word) => (
+          <text
+            {...inAt(ocrStart(word.firstChar))}
+            x={word.x}
+            y={OCR_Y}
+            fill="var(--ink)"
+            textLength={word.width}
+            lengthAdjust="spacingAndGlyphs"
+          >
+            {word.ocr}
+          </text>
+        ))
+      }
+    </g>
+
+    <text x="12" y="176" font-size="14" font-style="italic" fill="var(--note)"
+      >per-character marks</text
+    >
+    <g font-size="14">
+      <rect x="460" y="166" width="14" height="10" fill="var(--st-strike)"
+      ></rect>
+      <text x="479" y="176" fill="var(--st-strike)">strike</text>
+      <rect x="532" y="166" width="14" height="10" fill="var(--st-underline)"
+      ></rect>
+      <text x="551" y="176" fill="var(--st-underline)">underline</text>
+    </g>
+    <line
+      x1={X0}
+      x2="616"
+      y1={STRIKE_ROW.top + STRIKE_ROW.height + 0.5}
+      y2={STRIKE_ROW.top + STRIKE_ROW.height + 0.5}
+      stroke="var(--tool-light)"></line>
+    <line
+      x1={X0}
+      x2="616"
+      y1={UNDERLINE_ROW.top + UNDERLINE_ROW.height + 0.5}
+      y2={UNDERLINE_ROW.top + UNDERLINE_ROW.height + 0.5}
+      stroke="var(--tool-light)"></line>
+    {
+      bars.map((bar) => (
+        <>
+          <rect
+            {...barAt(bar.start)}
+            x={bar.x}
+            y={
+              STRIKE_ROW.top +
+              STRIKE_ROW.height -
+              bar.strike * STRIKE_ROW.height
+            }
+            width={ADVANCE - 3}
+            height={bar.strike * STRIKE_ROW.height}
+            fill="var(--st-strike)"
+          />
+          <rect
+            {...barAt(bar.start)}
+            x={bar.x}
+            y={
+              UNDERLINE_ROW.top +
+              UNDERLINE_ROW.height -
+              bar.underline * UNDERLINE_ROW.height
+            }
+            width={ADVANCE - 3}
+            height={bar.underline * UNDERLINE_ROW.height}
+            fill="var(--st-underline)"
+          />
+        </>
+      ))
+    }
+
+    <text x="12" y="266" font-size="14" font-style="italic" fill="var(--note)"
+      >text the AI reads</text
+    >
+    <g class="st-mono" font-size="18">
+      {
+        outputLines.map((tokens, line) =>
+          tokens.map((token) => (
+            <g {...inAt(token.start)}>
+              <text
+                x={token.x}
+                y={OUTPUT_Y[line]}
+                fill={token.color}
+                textLength={token.width}
+                lengthAdjust="spacingAndGlyphs"
+              >
+                {token.text}
+              </text>
+              {token.mark === 'strike' && (
+                <line
+                  x1={token.x}
+                  x2={token.x + token.width}
+                  y1={OUTPUT_Y[line] - 5.5}
+                  y2={OUTPUT_Y[line] - 5.5}
+                  stroke="var(--st-strike)"
+                  stroke-width="2"
+                />
+              )}
+              {token.mark === 'underline' && (
+                <line
+                  x1={token.x}
+                  x2={token.x + token.width}
+                  y1={OUTPUT_Y[line] + 5}
+                  y2={OUTPUT_Y[line] + 5}
+                  stroke="var(--st-underline)"
+                  stroke-width="2"
+                />
+              )}
+            </g>
+          )),
+        )
+      }
+    </g>
+
+    <StageTrack x1={12} x2={628} y={344} stages={STAGES} />
+  </svg>
+  <figcaption><slot /></figcaption>
+</figure>
+
+<Fragment set:html={`<style>${MOTION_CSS}</style>`} />
+
+<script>
+  import { playWhenVisible } from '../../../scripts/motion';
+
+  document.querySelectorAll('.motion-ocr-loss').forEach(playWhenVisible);
+</script>
