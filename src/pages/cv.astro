@@ -4,6 +4,8 @@ import Experience from '../components/cv/Experience.astro';
 import Section from '../components/cv/Section.astro';
 import Skill from '../components/cv/Skill.astro';
 import { sitePath } from '../lib/paths';
+import '@fontsource-variable/figtree';
+import '@fontsource-variable/fraunces';
 import {
   EMAIL,
   GITHUB_URL,
@@ -31,104 +33,116 @@ import {
           <li><a href={LINKEDIN_URL}>linkedin.com/in/ed-jex</a></li>
         </ul>
       </header>
-      <p class="summary">
-        I graduated top of my cohort with an MEng in Computer Science from
-        Durham University. I have a strong academic background in deep learning,
-        and industry experience in software development. For my final project, I
-        researched energy-efficient deep learning object detection on edge
-        devices for robotics. My interests include edge and tiny-scale deep
-        learning for computer vision, and reinforcement learning. I often work
-        on personal projects, such as using deep learning to <a
-          href="https://river.edjex.dev">forecast the river level</a
-        > in Durham.
-      </p>
       <div class="columns">
+        <p class="summary">
+          MEng Computer Science, Durham 2025, top of the year. I build small,
+          efficient models: a 12,387-weight detector that runs on 2.2 µJ a
+          frame, 680× less than YOLO11-nano; a 227k-parameter model that reads
+          strikethrough in patent amendments at 3 ms a line on CPU; and a
+          diffusion model in under a million parameters. At <a
+            href="https://solveintelligence.com">Solve Intelligence (YC S23)</a
+          >, a fast-moving legal AI startup, I also rebuilt the agent loop as a
+          service that runs thousands of LLM agents in the background. My
+          research interests are mechanistic interpretability and reinforcement
+          learning.
+        </p>
         <div class="column primary">
           <Section title="Experience">
             <Experience
-              title="Full Stack Software Engineer"
-              subtitle="Solve Intelligence"
+              title="Software Engineer"
+              subtitle="Solve Intelligence (YC S23)"
               date="July 2025–present"
             >
-              <p>
-                I am currently working as a full stack software engineer at <a
-                  href="https://solveintelligence.com">Solve Intelligence</a
-                >, working on LLM copilot tools for the patent application
-                drafting and prosecution. I have been a major contributor to
-                many new features, including our new charts product, asset
-                sharing features, and patent application language and
-                jurisdiction conversion.
-              </p>
-            </Experience>
-            <Experience
-              title="Undergraduate Teaching Assistant"
-              subtitle="Department of Computer Science"
-              date="2023–2025"
-            >
-              <p>
-                I assisted in the delivery of the first-year Computational
-                Thinking and second-year Networks and Systems courses by running
-                lab sessions. This involved helping students with weekly
-                assignments, answering questions, and explaining concepts.
-                Students have a wide range of abilities and backgrounds,
-                requiring me to be able to explain concepts in multiple ways and
-                adapt to different learning styles.
-              </p>
-            </Experience>
-            <Experience
-              title="Cisco Web Development Intern"
-              subtitle="Webex Web Client"
-              date="Summer 2022"
-            >
-              <p>
-                I worked on the Webex web client team, developing new features
-                and fixing bugs. Through this I gained experience with React and
-                Redux and learned how to work on software as part of a team.
-                Specific achievements include overhauling the implementation of
-                rich message content, migrating the build system, and
-                implementation of several UI components to a design
-                specification.
-              </p>
-            </Experience>
-
-            <Experience
-              title="Boat Club President"
-              subtitle="Trevelyan College Boat Club"
-              date="2023–2024"
-            >
-              <p>
-                This role encompassed running the finances of the club,
-                organizing training and racing events, and managing the other
-                members of the committee. Over the year, we succeeded in
-                replacing aging equipment, increasing the number of members, and
-                improving the club's racing performance. This role pushed me to
-                develop my leadership, organization, time, project, and team
-                management skills, all of which are transferable to a
-                professional environment.
-              </p>
+              <ul>
+                <li>
+                  Rewrote the core agent loop as its own microservice, out of
+                  the API. Agents now run in the background for hours, survive
+                  deployments, and scale to thousands at once. Results stream
+                  over Redis and server-sent events to the frontend, where they
+                  trigger actions; a reconnecting client resumes from a cursor
+                  with no gaps or duplicates.
+                </li>
+                <li>
+                  Took Charts from prototype to a production product used by
+                  thousands of customers, working end to end: the agent loop and
+                  AI tools, a planner delegating to subagents, through to the
+                  rich-text, cell-based editor. Tens of hours of attorney work
+                  now take minutes.
+                </li>
+                <li>
+                  Scaled agents from short, bounded tasks to long, open-ended
+                  ones: lazy document loading and parallel OCR for time to first
+                  token, and hunting down GIL-bound work to fit many agents on
+                  one container.
+                </li>
+                <li>
+                  Shipped across the stack: Postgres row-level security, live
+                  sharing, and patent language and jurisdiction conversion.
+                </li>
+                <li>
+                  Trained a 227,746-parameter (834 KB) model that labels each
+                  OCR character as struck or underlined, at 3 ms a line on two
+                  CPU threads, replacing image tokens at a sixth of the context
+                  cost. Took it apart with a pre-registered, 76-run retraining
+                  ablation: a placebo set the noise floor at a quarter of a
+                  point, and removing a part and retraining cost far less than
+                  switching it off (3.7 points against 94).
+                </li>
+              </ul>
             </Experience>
           </Section>
-          <Section title="Projects">
+          <Section title="Research and projects">
             <Experience
-              title="Energy Efficient Deep Learning Object Detection on Edge Devices"
+              title="Energy-efficient object detection on edge devices"
+              subtitle="MEng thesis, supervised by Dr Farshad Arvin"
             >
               <p>
-                For my final year project, I analysed the energy usage of object
-                detection model on a Hailo 8L accelerator and optimised this
-                using NAS method, implemented with a distributed pipeline. I
-                received a mark of 91% for this project, the highest in my
-                cohort and am in the process of publishing the results.
+                Asked how little energy a useful detector can spend. Treated
+                detection as one heatmap peak per animal rather than boxes,
+                trained five hundred architectures across a GPU cluster and
+                measured each on a Hailo-8L, because architecture explained only
+                15% of the variance in energy on the accelerator (80% on CPU).
+                The best has three layers and 12,387 weights, reaching
+                <strong>0.948 AP</strong> at <strong
+                  >2.2 µJ a frame, 680× less than YOLO11-nano</strong
+                >. It runs in the browser on hand-written WGSL compute shaders,
+                with every layer's feature maps inspectable.
+              </p>
+              <p class="links">
+                <a href="https://edjex.dev/blog/final-year-project/">write-up</a
+                > · <a
+                  href="https://github.com/Jex-y/lpcv-project-implementation"
+                  >code</a
+                >
               </p>
             </Experience>
-
-            <Experience title="River Level Forecasting">
+            <Experience
+              title="Deep learning under a parameter budget"
+              date="Module 90%, 2024"
+            >
               <p>
-                I developed and deployed a deep learning model that forecasts
-                the river level in Durham. The predictions can be viewed through
-                a <a href="https://river.edjex.dev">web dashboard</a>. This
-                allows rowing clubs to make informed decisions about when to
-                schedule sessions. The model is run using ONNX runtime and a
-                Rust web server.
+                A class-conditional diffusion model with classifier-free
+                guidance in under a million parameters, reaching
+                <strong>FID 18.1</strong> on CIFAR-100, and a 100k-parameter MobileNetV3
+                variant with grouped pointwise convolutions.
+              </p>
+            </Experience>
+            <Experience
+              title="Sample-efficient RL for BipedalWalker"
+              date="Module 90%, 2024"
+            >
+              <p>
+                Compared four model-free methods, then extended TD-MPC2 to solve
+                BipedalWalker in under 100 episodes.
+              </p>
+            </Experience>
+            <Experience
+              title="Temporally consistent video translation"
+              date="Module 75%, 2025"
+            >
+              <p>
+                A UVCGAN2-style ViT-UNet CycleGAN, extended with MoCycle-GAN
+                motion losses from RAFT optical flow, trained on an A100.
               </p>
             </Experience>
           </Section>
@@ -137,65 +151,78 @@ import {
           <Section title="Education">
             <Experience
               title="Durham University"
-              subtitle="Computer Science MEng"
+              subtitle="MEng Computer Science, First Class"
               date="2021–2025"
             >
               <p>
-                Graduated top of my year, with an 81% four-year average, 86% in
-                the final year. I achieved the highest final project mark (91%),
-                and was the only student to score above an 80% average. Modules
-                include: Deep Learning (90%), Reinforcement Learning (90%),
-                Computer Vision (80%), Advanced Computer Vision (75%), Advanced
-                Algorithms (88%), Quantum Computing (89%), and Parallel
-                Scientific Computing (83%).
+                81% four-year average, 86% in the final year; prizes for the top
+                project (91%) and the top overall grade. Data Compression 93%,
+                Quantum Computing 89%, Advanced Algorithms 88%.
               </p>
             </Experience>
-            <Experience
-              title="A Levels"
-              subtitle="4 A*s: Maths, Further Maths, Physics, Computer Science"
-              date="2019–2021"
-            />
+            <Experience title="A Levels: 4 A*s" date="2021">
+              <p>Maths, Further Maths, Physics, Computer Science.</p>
+            </Experience>
           </Section>
           <Section title="Skills">
             <Skill
-              name="Deep Learning | AI"
+              name="Machine learning"
               subskills={[
-                'Proficient with Pytorch and Scikit-learn, some experience with JAX',
-                'Computer Vision: Theoretical and practical work with SOTA models for classification, object detection, and segmentation',
-                'Generative Models: Build and trained small transformers for image diffusion, classification, unpaired image to image / video to video transfer (Cycle-GAN / MoCycle-GAN)',
-                'Reinforcement Learning: Understanding and implementation of SOTA algorithms for continuous environments. Experience with both model-free and model-based methods with MCTS.',
-                'Edge deployment: Deployment to Hailo accelerators and CPU targets. Experience with NAS, quantization, and pruning.',
-                'Hardware Aware Model Development: Experience measuring energy usage and throughput on edge devices',
-                'LLM Prompt Engineering: Experience developing professional tools leveraging language models',
+                'Hardware-aware NAS, quantisation, energy measurement',
+                'Edge deployment: ONNX, Hailo, WebGPU',
+                'PyTorch, JAX, Flax; GPU clusters',
+                'CNNs, transformers, diffusion, GANs',
+                'RL: TD-MPC2, SAC, REDQ, DropQ, CrossQ; MCTS',
               ]}
-              description="Skills developed and proven through university coursework, final project and personal projects"
             />
             <Skill
-              name="Web Development"
-              subskills={['Typescript, React, Redux, Next.js, TailwindCSS']}
-              description="I have experience building web applications with modern technologies. This CV is built with Astro."
-            />
-            <Skill
-              name="Rust"
+              name="Engineering"
               subskills={[
-                'Deep learning model deployment with ONNX runtime',
-                'Web service development with Axum',
+                'Python, Rust, TypeScript, C/C++',
+                'Production LLM agents: orchestration, tool use, streaming',
+                'Postgres, Redis, Celery, FastAPI, React',
+                'AWS, GCP, Docker, CI/CD',
               ]}
-              description="I have experience with Rust through personal projects."
             />
-            <Skill
-              name="DevOps"
-              subskills={[
-                'Continuous Integration and Deployment',
-                'GCP and AWS + Infrastructure as Code',
-                'Linux / Unix command line skills',
-              ]}
-              description="At Cisco I worked with CI/CD pipelines on Jenkins. For each of my personal projects I aim to build CI/CD pipelines and deploy to cloud platforms."
-            />
-            <Skill
-              name="C/C++"
-              description="Experience with C/C++ from university coursework."
-            />
+          </Section>
+          <Section title="Other experience">
+            <Experience
+              title="Web Development Intern"
+              subtitle="Cisco, Webex web client"
+              date="Summer 2022"
+            >
+              <p>
+                Rich message rendering, build system migration, React and Redux
+                UI components.
+              </p>
+            </Experience>
+            <Experience
+              title="Teaching Assistant"
+              subtitle="Durham Computer Science"
+              date="2023–2025"
+            >
+              <p>
+                Ran labs for Computational Thinking and Networks and Systems.
+              </p>
+            </Experience>
+            <Experience title="River level forecasting" date="2024">
+              <p>
+                PyTorch forecast served from Rust with ONNX Runtime, used by
+                Durham rowing clubs. <a href="https://river.edjex.dev"
+                  >river.edjex.dev</a
+                >
+              </p>
+            </Experience>
+            <Experience
+              title="President"
+              subtitle="Trevelyan College Boat Club"
+              date="2023–2024"
+            >
+              <p>
+                Ran finances, training and racing; replaced ageing equipment and
+                grew the membership.
+              </p>
+            </Experience>
           </Section>
         </div>
       </div>
@@ -205,13 +232,15 @@ import {
 
 <style>
   #cv {
+    --accent: #35573f;
     display: flex;
     flex-direction: column;
-    gap: 2.8mm;
+    gap: 3.6mm;
     width: min(210mm, 100% - 2 * var(--pad));
     margin-inline: auto;
+    font-family: 'Figtree Variable', Helvetica, Arial, sans-serif;
     font-size: 14px;
-    line-height: 1.38;
+    line-height: 1.4;
   }
 
   #cv :global(p) {
@@ -224,60 +253,76 @@ import {
     text-underline-offset: 1.5pt;
   }
 
+  #cv :global(h2) {
+    padding-bottom: 0.8mm;
+    border-bottom: 0.5pt solid var(--accent);
+    font-family: 'Fraunces Variable', Georgia, serif;
+    font-style: normal;
+    font-size: 1.38em;
+    color: var(--accent);
+  }
+
+  #cv :global(.subtitle) {
+    font-style: normal;
+  }
+
   header {
     display: flex;
     flex-wrap: wrap;
     align-items: flex-end;
     justify-content: space-between;
     gap: 3mm 8mm;
-    padding-bottom: 3mm;
-    border-bottom: 1.5pt solid var(--ink);
   }
 
   h1 {
     margin: 0;
+    font-family: 'Fraunces Variable', Georgia, serif;
     font-weight: 300;
-    font-size: 3.7em;
-    line-height: 0.92;
+    font-size: 4.8em;
+    line-height: 0.95;
     letter-spacing: -0.025em;
   }
 
   header ul {
-    display: grid;
-    grid-template-columns: repeat(2, auto);
-    gap: 0.6mm 6mm;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3mm;
     margin: 0;
     padding: 0;
     list-style: none;
-    font-size: 1.04em;
+    font-size: 0.95em;
     color: var(--note);
   }
 
   .summary {
-    font-size: 1.086em;
+    font-size: 1.07em;
     line-height: 1.45;
+  }
+
+  .links {
+    color: var(--note);
   }
 
   .columns {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    gap: 4mm 7mm;
+    gap: 3.7mm 8mm;
   }
 
   .column {
     display: flex;
     flex-direction: column;
-    gap: 3.2mm;
+    gap: 3.7mm;
   }
 
-  @media (min-width: 820px) {
+  @media print, (min-width: 820px) {
     #cv {
       box-sizing: border-box;
       width: 210mm;
       min-height: 297mm;
-      padding: 11mm 13mm;
+      padding: 10.6mm 11.6mm;
       outline: 1px solid var(--tool-light);
-      font-size: 8.1pt;
+      font-size: 9.1pt;
     }
 
     header ul {
@@ -285,7 +330,21 @@ import {
     }
 
     .columns {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: minmax(0, 1fr) 56.6mm;
+      grid-template-rows: auto 1fr;
+      grid-template-areas: 'summary secondary' 'primary secondary';
+    }
+
+    .summary {
+      grid-area: summary;
+    }
+
+    .primary {
+      grid-area: primary;
+    }
+
+    .secondary {
+      grid-area: secondary;
     }
   }
 
@@ -304,20 +363,8 @@ import {
     }
 
     #cv {
-      box-sizing: border-box;
-      width: 210mm;
       height: 297mm;
-      padding: 11mm 13mm;
       outline: none;
-      font-size: 8.1pt;
-    }
-
-    header ul {
-      text-align: right;
-    }
-
-    .columns {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
 </style>

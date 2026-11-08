@@ -44,4 +44,24 @@ const { title, date, subtitle } = Astro.props;
     font-style: italic;
     color: var(--note);
   }
+  .entry :global(ul) {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .entry :global(li) {
+    position: relative;
+    padding-left: 3mm;
+  }
+
+  .entry :global(li)::before {
+    content: '';
+    position: absolute;
+    left: 0.4mm;
+    top: 0.72em;
+    width: 1.1mm;
+    height: 0;
+    border-top: 0.75pt solid var(--ink);
+  }
 </style>
