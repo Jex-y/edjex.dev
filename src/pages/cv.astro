@@ -5,7 +5,6 @@ import Section from '../components/cv/Section.astro';
 import Skill from '../components/cv/Skill.astro';
 import { sitePath } from '../lib/paths';
 import '@fontsource-variable/figtree';
-import '@fontsource-variable/fraunces';
 import {
   EMAIL,
   GITHUB_URL,
@@ -231,6 +230,20 @@ import {
 </BaseLayout>
 
 <style>
+  @font-face {
+    font-family: 'Fraunces CV';
+    font-weight: 300;
+    font-display: swap;
+    src: url('../fonts/fraunces-300.woff2') format('woff2');
+  }
+
+  @font-face {
+    font-family: 'Fraunces CV';
+    font-weight: 400;
+    font-display: swap;
+    src: url('../fonts/fraunces-400.woff2') format('woff2');
+  }
+
   #cv {
     --accent: #35573f;
     display: flex;
@@ -256,7 +269,7 @@ import {
   #cv :global(h2) {
     padding-bottom: 0.8mm;
     border-bottom: 0.5pt solid var(--accent);
-    font-family: 'Fraunces Variable', Georgia, serif;
+    font-family: 'Fraunces CV', Georgia, serif;
     font-style: normal;
     font-size: 1.38em;
     color: var(--accent);
@@ -276,7 +289,7 @@ import {
 
   h1 {
     margin: 0;
-    font-family: 'Fraunces Variable', Georgia, serif;
+    font-family: 'Fraunces CV', Georgia, serif;
     font-weight: 300;
     font-size: 4.8em;
     line-height: 0.95;

@@ -35,7 +35,6 @@ const { title, date, subtitle } = Astro.props;
   .date {
     flex: none;
     font-size: 0.94em;
-    font-variant-numeric: tabular-nums;
     color: var(--note);
   }
 
@@ -51,17 +50,14 @@ const { title, date, subtitle } = Astro.props;
   }
 
   .entry :global(li) {
-    position: relative;
     padding-left: 3mm;
   }
 
   .entry :global(li)::before {
     content: '';
-    position: absolute;
-    left: 0.4mm;
-    top: 0.72em;
+    float: left;
     width: 1.1mm;
-    height: 0;
+    margin: 0.72em 0 0 -2.6mm;
     border-top: 0.75pt solid var(--ink);
   }
 </style>
