@@ -7,7 +7,8 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "deploy": "astro build && firebase deploy --only hosting"
+    "deploy": "astro build && firebase deploy --only hosting",
+    "check:cv-pdf": "node scripts/check-cv-pdf.mjs"
   },
   "dependencies": {
     "@astrojs/markdoc": "^0.15.0",
@@ -53,6 +54,7 @@
   },
   "devDependencies": {
     "@webgpu/types": "^0.1.64",
+    "pdfjs-dist": "^4.10.38",
     "prettier": "^3.6.2",
     "prettier-plugin-astro": "^0.14.1"
   }
