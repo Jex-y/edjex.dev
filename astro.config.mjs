@@ -30,6 +30,7 @@ export default defineConfig({
                                                         const url = new URL(link.href);
                                                         url.searchParams.set('utm_source', 'cv-pdf');
                                                         url.searchParams.set('utm_medium', 'pdf');
+                                                        url.searchParams.set('utm_campaign', 'nov-26');
                                                         link.href = url.href;
                                                 }
                                         });
