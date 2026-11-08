@@ -1,3 +1,7 @@
+---
+import { sitePath } from '../lib/paths';
+---
+
 <div class="hero">
   <canvas
     id="hero-surface"
@@ -10,8 +14,8 @@
       <h1>Ed Jex</h1>
       <nav>
         <a href="#work">Work</a>
-        <a href="#writing">Writing</a>
-        <a href="#cv">CV</a>
+        <a href={sitePath('/blog/')}>Writing</a>
+        <a href={sitePath('/cv/')}>CV</a>
         <a href="#cv">Email</a>
       </nav>
     </header>
