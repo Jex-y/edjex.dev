@@ -1,0 +1,27 @@
+---
+type Stage = { label: string; start: number };
+type Props = { x1: number; x2: number; y: number; stages: readonly Stage[] };
+
+const { x1, x2, y, stages } = Astro.props;
+const span = x2 - x1;
+---
+
+<line x1={x1} y1={y + 0.5} x2={x2} y2={y + 0.5} stroke="var(--tool-light)"
+></line>
+<rect
+  class="st-head"
+  x={x1 - 1}
+  y={y - 6}
+  width="2"
+  height="13"
+  fill="var(--ink)"
+  style={`--st-travel: ${span}px`}></rect>
+<g font-size="13.5" fill="var(--note)">
+  {
+    stages.map(({ label, start }) => (
+      <text x={x1 + (span * start) / 100} y={y + 22}>
+        {label}
+      </text>
+    ))
+  }
+</g>

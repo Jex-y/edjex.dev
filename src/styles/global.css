@@ -269,6 +269,16 @@ html:not(.js) .note {
   line-height: 1.55;
 }
 
+.post-body .katex {
+  position: relative;
+}
+
+.post-body .katex-display,
+.post-body .table-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
 .post-body blockquote {
   padding-left: 18px;
   border-left: 1px solid var(--ink);
