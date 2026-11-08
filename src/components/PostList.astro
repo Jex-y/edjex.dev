@@ -1,7 +1,11 @@
 ---
+import { Image } from 'astro:assets';
 import { getCollection } from 'astro:content';
 import FormattedDate from './FormattedDate.astro';
 import { sitePath } from '../lib/paths';
+
+type Props = { heroes?: boolean };
+const { heroes = false } = Astro.props;
 
 const posts = (await getCollection('blog'))
   .filter((post) => post.data.draft !== true && post.data.pubDate <= new Date())
@@ -12,9 +16,64 @@ const posts = (await getCollection('blog'))
   {
     posts.map((post) => (
       <li>
-        <a href={sitePath(`/blog/${post.id}/`)}>{post.data.title}</a>
-        <FormattedDate date={post.data.pubDate} />
+        {heroes && post.data.heroImage ? (
+          <a class="card" href={sitePath(`/blog/${post.id}/`)}>
+            <Image
+              src={post.data.heroImage}
+              alt=""
+              width={1200}
+              height={675}
+              fit="cover"
+            />
+            <span class="title">{post.data.title}</span>
+            <span class="description">{post.data.description}</span>
+            <FormattedDate date={post.data.pubDate} />
+          </a>
+        ) : (
+          <>
+            <a href={sitePath(`/blog/${post.id}/`)}>{post.data.title}</a>
+            <FormattedDate date={post.data.pubDate} />
+          </>
+        )}
       </li>
     ))
   }
 </ul>
+
+<style>
+  .card {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .card img {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    margin-bottom: 6px;
+    background: var(--placeholder);
+  }
+
+  .title {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+  }
+
+  .description {
+    font-size: var(--nfs);
+    line-height: 1.5;
+    color: var(--note);
+  }
+
+  .card :global(time) {
+    padding: 0;
+    font-size: 13.5px;
+    color: var(--note);
+  }
+</style>
