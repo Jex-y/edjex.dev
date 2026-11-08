@@ -9,6 +9,7 @@ import rehypeSlug from 'rehype-slug';
 import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
 import pdf from 'astro-pdf';
+import { CV_EMAIL } from './src/consts';
 
 
 
@@ -23,18 +24,27 @@ export default defineConfig({
                         [`${base}cv`]: {
                                 path: '/cv.pdf',
                                 // Tag links back to the site so visits from the PDF show up in analytics
-                                callback: (page) =>
-                                        page.$$eval('a[href^="https://edjex.dev"]', (links) => {
+                                callback: async (page) => {
+                                        await page.$$eval('a[href^="https://edjex.dev"]', (links) => {
                                                 for (const link of links) {
                                                         const url = new URL(link.href);
                                                         url.searchParams.set('utm_source', 'cv-pdf');
                                                         url.searchParams.set('utm_medium', 'pdf');
                                                         link.href = url.href;
                                                 }
-                                        }),
+                                        });
+                                        await page.$eval('[data-email]', (item, address) => {
+                                                const link = document.createElement('a');
+                                                link.href = `mailto:${address}`;
+                                                link.textContent = address;
+                                                item.replaceChildren(link);
+                                        }, CV_EMAIL);
+                                },
                                 pdf: {
                                         format: 'A4',
                                         printBackground: true,
+                                        tagged: true,
+                                        outline: true,
                                 }
                         }
                 },

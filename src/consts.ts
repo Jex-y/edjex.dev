@@ -5,3 +5,4 @@ export const SITE_URL = 'https://edjex.dev';
 export const GITHUB_URL = 'https://github.com/Jex-y';
 export const LINKEDIN_URL = 'https://www.linkedin.com/in/ed-jex/';
 export const EMAIL = 'ed (at) edjex.dev';
+export const CV_EMAIL = 'ed@edjex.dev';
